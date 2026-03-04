@@ -18,7 +18,7 @@ onMounted(async () => {
     
     <ul>
       <li v-for="book in myBooks" :key="book.title" style="margin-bottom: 10px;">
-        <strong>{{ book.title }}</strong> by {{ book.author }} <em>({{ book.genre }})</em>
+        <RouterLink :to="`/book/${book.title}`"><strong>{{ book.title }}</strong></RouterLink> by {{ book.author }} <em>({{ book.genre }})</em>
       </li>
     </ul>
   </div>
