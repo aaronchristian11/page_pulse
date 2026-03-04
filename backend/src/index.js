@@ -9,4 +9,4 @@ app.use(express.json());
 
 app.get('api/health', (req, res) => res.json({status: 'ok'}));
 
-app.listen(PORT, () => console.log(`Page Pulse API running on port ${PORT}`))
+app.listen(PORT, () => console.log(`STEFAN WAS HERE ON PORT ${PORT}`))
