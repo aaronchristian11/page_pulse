@@ -1,9 +1,25 @@
 <script setup lang="ts">
-import TheWelcome from '../components/TheWelcome.vue'
+import { ref, onMounted } from 'vue'
+
+// Start with an empty list
+const myBooks = ref<any[]>([])
+
+// When the page loads, fetch the books from the backend!
+onMounted(async () => {
+  const response = await fetch('http://localhost:3000/api/books')
+  myBooks.value = await response.json()
+})
 </script>
 
 <template>
-  <main>
-    <TheWelcome />
-  </main>
+  <div style="font-family: Arial, sans-serif; padding: 20px;">
+    <h1>📚 My Book Catalog</h1>
+    <p>Welcome to my assignment! Here are the current books:</p>
+    
+    <ul>
+      <li v-for="book in myBooks" :key="book.title" style="margin-bottom: 10px;">
+        <strong>{{ book.title }}</strong> by {{ book.author }} <em>({{ book.genre }})</em>
+      </li>
+    </ul>
+  </div>
 </template>
