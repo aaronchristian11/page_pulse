@@ -12,7 +12,7 @@ const books = [
   { title: "The Hobbit", author: "J.R.R. Tolkien", genre: "Fantasy" },
   { title: "1984", author: "George Orwell", genre: "Sci-Fi" },
   { title: "The Great Gatsby", author: "F. Scott Fitzgerald", genre: "Classic" },
-  { title: "Dune", author: "Frank Herbert", genre: "Sci-Fi" } // I added a 4th book so we know it worked!
+  { title: "Dune", author: "Frank Herbert", genre: "Sci-Fi" }
 ];
 
 app.get('/api/books', (req, res) => res.json(books));

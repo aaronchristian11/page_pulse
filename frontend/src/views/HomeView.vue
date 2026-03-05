@@ -13,8 +13,8 @@ onMounted(async () => {
 
 <template>
   <div style="font-family: Arial, sans-serif; padding: 20px;">
-    <h1>📚 My Book Catalog</h1>
-    <p>Welcome to my assignment! Here are the current books:</p>
+    <h1>My Book Shelf</h1>
+    <p>Here are the current books:</p>
     
     <ul>
       <li v-for="book in myBooks" :key="book.title" style="margin-bottom: 10px;">
