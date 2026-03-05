@@ -1,23 +1,25 @@
 services:
   backend:
     container_name: express
-    build: ./backend
+    build: ./app/backend
     ports:
       - "3000:3000"
     volumes:
       - ./data:/app/data
+      - ./app/backend:/app
     environment:
       - DB_PATH=/app/data/pagepulse.db
       - PORT=3000
     restart: unless-stopped
+    command: sh -c "npm install && node src/index.ts"
 
   frontend:
     container_name: vue
-    build: ./frontend
+    build: ./app/frontend
     ports:
       - "8080:8080"
     depends_on:
       - backend
     restart: unless-stopped
     volumes:
-      - ./app:/app
+      - ./app.frontend:/app
