@@ -12,7 +12,6 @@
         <button :class="['tab', { active: mode === 'register' }]" @click="mode = 'register'">Register</button>
       </div>
 
-      <!-- Login Form -->
       <div v-if="mode === 'login'" class="form">
         <div class="field">
           <label>Username</label>
@@ -26,7 +25,6 @@
         <div class="hint">Demo: <code>admin/admin123</code></div>
       </div>
 
-      <!-- Register Form -->
       <div v-if="mode === 'register'" class="form">
         <div class="field">
           <label>Username</label>
@@ -58,6 +56,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import axios from 'axios'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import InputNumber from 'primevue/inputnumber'
@@ -76,8 +75,17 @@ async function doLogin() {
   error.value = ''
   if (!loginForm.value.username || !loginForm.value.password) { error.value = 'All fields required'; return }
   loading.value = true
+  
   try {
-    await auth.login(loginForm.value.username, loginForm.value.password)
+    // 1. Component talks to the backend API
+    const response = await axios.post('http://localhost:3000/api/login', {
+      username: loginForm.value.username,
+      password: loginForm.value.password
+    })
+    
+    // 2. Component tells the store to save the user globally
+    auth.setUser(response.data)
+    
     router.push('/')
   } catch (e) {
     error.value = e.response?.data?.error || 'Login failed'
@@ -88,8 +96,14 @@ async function doRegister() {
   error.value = ''
   if (!regForm.value.username || !regForm.value.email || !regForm.value.password) { error.value = 'All fields required'; return }
   loading.value = true
+  
   try {
-    await auth.register(regForm.value)
+    // 1. Component sends registration to backend API
+    const response = await axios.post('http://localhost:3000/api/register', regForm.value)
+    
+    // 2. Component tells the store to save the user globally
+    auth.setUser(response.data)
+    
     router.push('/')
   } catch (e) {
     error.value = e.response?.data?.error || 'Registration failed'
