@@ -1,7 +1,3 @@
-//<template>
-//  <RouterView />
-//</template>
-
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { openLibraryApi, toBook } from '@/openLibraryApi'
