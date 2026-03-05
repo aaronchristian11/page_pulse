@@ -19,6 +19,8 @@
     "format": "prettier --write --experimental-cli src"
   },
   "dependencies": {
+    "@primeuix/themes": "^2.0.3",
+    "@primevue/themes": "^4.5.4",
     "pinia": "^3.0.4",
     "vue": "beta",
     "vue-router": "^4.6.4"
