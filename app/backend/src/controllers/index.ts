@@ -1,3 +1,3 @@
-export * from './auth.controller';
+export * from './auth.controller.ts';
 // export * from './shelf.controller';
 // export * from './group.controller';

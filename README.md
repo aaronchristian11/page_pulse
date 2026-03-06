@@ -24,20 +24,44 @@ docker compose version
 
 ## Quick Start
 
-### Build and run containers
-```bash
-# Build images and start all containers
-docker compose up --build
+Two separate compose files are provided — one for local development and one for production.
 
-# Run in detached mode (background)
-docker compose up --build -d
+### Development
+Runs the Vite dev server (hot reload) and `tsx` for the backend (no compile step).
+
+```bash
+docker compose -f compose.dev.yaml up --build
+```
+
+Then open http://localhost:5173
+
+### Production
+Compiles TypeScript on the backend and builds static assets on the frontend before serving.
+
+```bash
+docker compose -f compose.prod.yaml up --build
 ```
 
 Then open http://localhost:8080
 
+---
+
+### Run in detached mode (background)
+```bash
+# Development
+docker compose -f compose.dev.yaml up --build -d
+
+# Production
+docker compose -f compose.prod.yaml up --build -d
+```
+
 ### Stop containers
 ```bash
-docker compose down
+# Development
+docker compose -f compose.dev.yaml down
+
+# Production
+docker compose -f compose.prod.yaml down
 ```
 
 ### Check containers
@@ -48,17 +72,14 @@ docker ps
 ### Check logs
 ```bash
 # Logs for all services
-docker compose logs
+docker compose -f compose.dev.yaml logs
 
 # Logs for a specific service
-docker compose logs backend
-docker compose logs frontend
+docker compose -f compose.dev.yaml logs backend
+docker compose -f compose.dev.yaml logs frontend
 
 # Follow logs in real time
-docker compose logs -f
-
-# Follow logs for a specific service
-docker compose logs -f backend
+docker compose -f compose.dev.yaml logs -f
 ```
 
 ### Run bash/sh commands on containers
@@ -85,21 +106,25 @@ docker exec -it <container_name> sh
 
 ```
 page-pulse/
-├── frontend/          # Vue 3 app
-│   ├── src/
-│   │   ├── api/       # Axios API calls
-│   │   ├── components/ # BookCard, BookForm
-│   │   ├── router/    # Vue Router
-│   │   ├── stores/    # Pinia auth store
-│   │   └── views/     # Login, Dashboard, Groups, GroupDetail
-│   └── Dockerfile
-├── backend/           # Express API
-│   ├── src/
-│   │   ├── db/        # SQLite schema + seed
-│   │   └── routes/    # auth, shelves, groups
-│   └── Dockerfile
-├── data/              # SQLite .db file (auto-created)
-└── compose.yaml
+├── app/
+│   ├── frontend/          # Vue 3 app
+│   │   ├── src/
+│   │   │   ├── api/       # Axios API calls
+│   │   │   ├── components/ # BookCard, BookForm
+│   │   │   ├── router/    # Vue Router
+│   │   │   ├── stores/    # Pinia auth store
+│   │   │   └── views/     # Login, Dashboard, Groups, GroupDetail
+│   │   ├── Dockerfile.dev  # Vite dev server
+│   │   └── Dockerfile.prod # Build + http-server
+│   └── backend/           # Express API
+│       ├── src/
+│       │   ├── db/        # SQLite schema + seed
+│       │   └── routes/    # auth, shelves, groups
+│       ├── Dockerfile.dev  # tsx (no compile)
+│       └── Dockerfile.prod # tsc compile + node
+├── data/                  # SQLite .db file (auto-created)
+├── compose.dev.yaml        # Local development
+└── compose.prod.yaml       # Production
 ```
 
 ## API Endpoints

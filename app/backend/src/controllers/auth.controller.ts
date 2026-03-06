@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import knex from '../db/database';
+import type { Request, Response } from 'express';
+import knex from '../db/database.ts';
 import bcrypt from 'bcryptjs';
 
 export const login = async (req: Request, res: Response) => {
