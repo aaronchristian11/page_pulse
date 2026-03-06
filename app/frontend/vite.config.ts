@@ -11,18 +11,27 @@ export default defineConfig({
         vue(),
         vueJsx(),
         vueDevTools(),
-        tailwindcss()
+        tailwindcss(),
     ],
     resolve: {
         alias: {
             '@': fileURLToPath(new URL('./src', import.meta.url))
         },
     },
+    optimizeDeps: {
+        include: ['primevue']
+    },
     server: {
         host: '0.0.0.0',
         port: 5173,
         watch: {
             usePolling: true,
+        },
+        proxy: {
+            '/api': {
+                target: 'http://express_dev:3000',
+                changeOrigin: true,
+            }
         }
     },
 })

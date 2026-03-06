@@ -1,9 +1,11 @@
 import type { Request, Response } from 'express';
 import knex from '../db/database.ts';
 import bcrypt from 'bcryptjs';
+import * as console from "console";
 
 export const login = async (req: Request, res: Response) => {
     const { username, password } = req.body;
+    console.log(req);
     if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
 
     const user = await knex('users').where({ username }).whereNull('deleted_at').first();
