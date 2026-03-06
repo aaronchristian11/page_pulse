@@ -1,0 +1,23 @@
+FROM node:24-alpine AS builder
+
+# make the 'app' folder the current working directory
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# --- Production image ---
+FROM node:24-alpine
+
+RUN npm install -g http-server
+
+WORKDIR /app
+
+COPY --from=builder /app/dist ./dist
+
+EXPOSE 8080
+
+CMD ["http-server", "dist", "-p", "8080"]
