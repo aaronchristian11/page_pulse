@@ -1,5 +1,6 @@
 .idea
 app/backend/node_modules
+app/backend/npm
 app/frontend/node_modules
 app/frontend/.vscode
 data/

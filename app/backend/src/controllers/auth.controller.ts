@@ -1,11 +1,9 @@
 import type { Request, Response } from 'express';
 import knex from '../db/database.ts';
 import bcrypt from 'bcryptjs';
-import * as console from "console";
 
 export const login = async (req: Request, res: Response) => {
     const { username, password } = req.body;
-    console.log(req);
     if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
 
     const user = await knex('users').where({ username }).whereNull('deleted_at').first();
@@ -19,12 +17,12 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const register = async (req: Request, res: Response) => {
-    const { username, first_name, last_name, password, phone_number } = req.body;
-    if (!username || !first_name || !last_name || !password) return res.status(400).json({ error: 'All fields required' });
+    const { username, first_name, last_name, email, password, phone_number } = req.body;
+    if (!username || !first_name || !last_name || !email || !password) return res.status(400).json({ error: 'All fields required' });
 
     try {
         const hashed = await bcrypt.hash(password, 10);
-        const [id] = await knex('users').insert({ username, first_name, last_name, password: hashed, phone_number });
+        const [id] = await knex('users').insert({ username, first_name, last_name, email, password: hashed, phone_number });
         const user = await knex('users').where({ id }).first();
         const { password: _, ...safeUser } = user;
         res.status(201).json({ user: safeUser });
