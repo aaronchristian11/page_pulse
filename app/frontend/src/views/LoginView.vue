@@ -9,15 +9,6 @@
                 <p>Your personal book universe</p>
             </div>
 
-            <div class="tabs">
-                <button :class="['tab', { active: mode === 'login' }]" @click="mode = 'login'">
-                    Sign In
-                </button>
-                <button :class="['tab', { active: mode === 'register' }]"
-                        @click="mode = 'register'">Register
-                </button>
-            </div>
-
             <Tabs value="0">
                 <TabList>
                     <Tab value="0">Login</Tab>
@@ -76,12 +67,36 @@
                                 <InputText v-model="regForm.email"
                                            type="email"
                                            placeholder="your@email.com"
-                                           class="w-full"/>
+                                           class="w-full" />
                             </div>
                             <div class="mb-4">
-                                <label>Phone number</label>
-                                <InputText v-model="regForm.phone_numbeer"
-                                           placeholder="Your phone number"
+                                <label>Address line 1</label>
+                                <InputText v-model="regForm.address.address_line_1"
+                                           placeholder="Address line 1"
+                                           class="w-full" />
+                            </div>
+                            <div class="mb-4">
+                                <label>Address line 2</label>
+                                <InputText v-model="regForm.address.address_line_2"
+                                           placeholder="Address line 2"
+                                           class="w-full" />
+                            </div>
+                            <div class="mb-4">
+                                <label>City</label>
+                                <InputText v-model="regForm.address.city"
+                                           placeholder="City"
+                                           class="w-full" />
+                            </div>
+                            <div class="mb-4">
+                                <label>Province</label>
+                                <InputText v-model="regForm.address.province"
+                                           placeholder="Province"
+                                           class="w-full" />
+                            </div>
+                            <div class="mb-4">
+                                <label>Postal Code</label>
+                                <InputText v-model="regForm.address.postal_code"
+                                           placeholder="Postal code"
                                            class="w-full" />
                             </div>
                             <div class="mb-4">
@@ -130,14 +145,26 @@ import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 import logo from '@/assets/logo.svg';
 
-const auth = useAuthStore()
-const router = useRouter()
-
-const mode = ref('login')
-const loading = ref(false)
-const error = ref('')
-const loginForm = ref({username: '', password: ''})
-const regForm = ref({username: '', first_name: '', last_name: '', email: '', password: '', phone_number: ''})
+const auth = useAuthStore();
+const router = useRouter();
+const loading = ref(false);
+const error = ref('');
+const loginForm = ref({username: '', password: ''});
+const regForm = ref({
+    username: '',
+    first_name: '',
+    last_name: '',
+    email: '',
+    password: '',
+    phone_number: '',
+    address: {
+        address_line_1: '',
+        address_line_2: '',
+        city: '',
+        province: '',
+        postal_code: ''
+    }
+});
 
 async function doLogin() {
     error.value = ''
@@ -165,28 +192,7 @@ async function doRegister() {
     }
     loading.value = true
 
-    // try {
-    //     // 1. Component sends registration to backend API
-    //     const response = await axios.post('http://localhost:3000/api/register', regForm.value)
-    //
-    //     // 2. Component tells the store to save the user globally
-    //     auth.setUser(response.data)
-    //
-    //     router.push('/')
-    // } catch (e) {
-    //     error.value = e.response?.data?.error || 'Registration failed'
-    // } finally {
-    //     loading.value = false
-    // }
-
-    await axios.post('/api/auth/register', {
-        username: regForm.value.username,
-        first_name: regForm.value.first_name,
-        last_name: regForm.value.last_name,
-        email: regForm.value.email,
-        password: regForm.value.password,
-        phone_number: regForm.value.phone_number
-    }).then(res => {
+    await axios.post('/api/auth/register', regForm.value).then(res => {
         console.log('you ere registered!')
     }).catch(error => {
         console.log(error);
