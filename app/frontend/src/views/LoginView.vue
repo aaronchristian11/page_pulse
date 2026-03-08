@@ -1,199 +1,218 @@
-<template>
-    <div class="col-span-full place-self-center">
-        <div class="flex flex-col gap-4">
-            <div class="brand">
-                <div class="w-full h-full">
-                    <img class="object-cover" :src="logo" alt   ="page pulse">
-                </div>
-                <h1>Page Pulse</h1>
-                <p>Your personal book universe</p>
-            </div>
-
-            <div class="tabs">
-                <button :class="['tab', { active: mode === 'login' }]" @click="mode = 'login'">
-                    Sign In
-                </button>
-                <button :class="['tab', { active: mode === 'register' }]"
-                        @click="mode = 'register'">Register
-                </button>
-            </div>
-
-            <Tabs value="0">
-                <TabList>
-                    <Tab value="0">Login</Tab>
-                    <Tab value="1">Register</Tab>
-                </TabList>
-                <TabPanels>
-                    <TabPanel value="0">
-                        <form @submit="doLogin">
-                            <div class="mb-4">
-                                <label>Username</label>
-                                <InputText v-model="loginForm.username"
-                                           placeholder="Enter username"
-                                           class="w-full" />
-                            </div>
-                            <div class="mb-4">
-                                <label>Password</label>
-                                <Password v-model="loginForm.password"
-                                          :feedback="false"
-                                          toggleMask
-                                          placeholder="Enter password"
-                                          inputClass="w-full"
-                                          :pt="{
-                                              root: { class: 'w-full' },
-                                              input: { class: 'w-full' }
-                                          }" />
-                            </div>
-                            <Button label="Sign In"
-                                    icon="pi pi-sign-in"
-                                    class="w-full mb-4"
-                                    :loading="loading"
-                                    @click="doLogin"/>
-                        </form>
-                    </TabPanel>
-                    <TabPanel value="1">
-                        <form @submit="doRegister">
-                            <div class="mb-4">
-                                <label>Username</label>
-                                <InputText v-model="regForm.username"
-                                           placeholder="Choose username"
-                                           class="w-full"/>
-                            </div>
-                            <div class="mb-4">
-                                <label>First name</label>
-                                <InputText v-model="regForm.first_name"
-                                           placeholder="Choose username"
-                                           class="w-full"/>
-                            </div>
-                            <div class="mb-4">
-                                <label>Last name</label>
-                                <InputText v-model="regForm.last_name"
-                                           placeholder="Choose username"
-                                           class="w-full"/>
-                            </div>
-                            <div class="mb-4">
-                                <label>Email</label>
-                                <InputText v-model="regForm.email"
-                                           type="email"
-                                           placeholder="your@email.com"
-                                           class="w-full"/>
-                            </div>
-                            <div class="mb-4">
-                                <label>Phone number</label>
-                                <InputText v-model="regForm.phone_numbeer"
-                                           placeholder="Your phone number"
-                                           class="w-full" />
-                            </div>
-                            <div class="mb-4">
-                                <label>Password</label>
-                                <Password v-model="regForm.password"
-                                          toggleMask
-                                          placeholder="Create password"
-                                          class="w-full" />
-                            </div>
-                            <div class="mb-4">
-                                <label>Confirm Password</label>
-                                <Password v-model="regForm.confirm_password"
-                                          toggleMask
-                                          placeholder="Confirm Password"
-                                          class="w-full" />
-                            </div>
-                            <Button label="Create Account"
-                                    icon="pi pi-user-plus"
-                                    class="w-full mb-4"
-                                    :loading="loading"
-                                    @click="doRegister" />
-                        </form>
-                    </TabPanel>
-                </TabPanels>
-            </Tabs>
-
-            <div v-if="error" class="error-msg">
-                <i class="pi pi-exclamation-circle"></i> {{ error }}
-            </div>
-        </div>
-    </div>
-</template>
-
-<script setup>
-import {ref} from 'vue';
-import {useRouter} from 'vue-router';
-import {useAuthStore} from '../stores/auth';
-import axios from 'axios';
-import InputText from 'primevue/inputtext';
-import Password from 'primevue/password';
-import Button from 'primevue/button';
-import Tabs from 'primevue/tabs';
-import TabList from 'primevue/tablist';
-import Tab from 'primevue/tab';
-import TabPanels from 'primevue/tabpanels';
-import TabPanel from 'primevue/tabpanel';
-import logo from '@/assets/logo.svg';
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import axios from 'axios'
+import InputText from 'primevue/inputtext'
+import Password from 'primevue/password'
+import Button from 'primevue/button'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
+import TabPanel from 'primevue/tabpanel'
+import { useToast } from 'primevue/usetoast'
+import logo from '@/assets/logo.svg'
 
 const auth = useAuthStore()
 const router = useRouter()
+const toast = useToast()
 
-const mode = ref('login')
 const loading = ref(false)
 const error = ref('')
-const loginForm = ref({username: '', password: ''})
-const regForm = ref({username: '', first_name: '', last_name: '', email: '', password: '', phone_number: ''})
+const loginForm = ref({ username: '', password: '' })
+const regForm = ref({
+    username: '',
+    first_name: '',
+    last_name: '',
+    email: '',
+    password: '',
+    confirm_password: '',
+    phone_number: '',
+})
 
 async function doLogin() {
     error.value = ''
     if (!loginForm.value.username || !loginForm.value.password) {
-        error.value = 'All fields required';
+        error.value = 'All fields required'
         return
     }
     loading.value = true
-
-    await axios.post('/api/auth/login', {
-        username: loginForm.value.username,
-        password: loginForm.value.password
-    }).then(res => {
-        auth.setUser(res.data);
-    }).catch(error => {
-        console.log(error);
-    }).finally(() => loading.value = false);
+    try {
+        const res = await axios.post('/api/auth/login', {
+            username: loginForm.value.username,
+            password: loginForm.value.password,
+        })
+        auth.setUser(res.data.user)
+        toast.add({
+            severity: 'success',
+            summary: 'Successfully Logged In!',
+            life: 3000,
+        })
+        router.push('/')
+    } catch (e: any) {
+        error.value = e.response?.data?.error || 'Login failed'
+    } finally {
+        loading.value = false
+    }
 }
 
 async function doRegister() {
     error.value = ''
-    if (!regForm.value.username || !regForm.value.email || !regForm.value.password) {
-        error.value = 'All fields required';
+    if (!regForm.value.username || !regForm.value.first_name || !regForm.value.last_name || !regForm.value.password) {
+        error.value = 'All fields required'
+        return
+    }
+    if (regForm.value.password !== regForm.value.confirm_password) {
+        error.value = 'Passwords do not match'
         return
     }
     loading.value = true
-
     try {
-        // 1. Component sends registration to backend API
-        const response = await axios.post('http://localhost:3000/api/register', regForm.value)
-
-        // 2. Component tells the store to save the user globally
-        auth.setUser(response.data)
-
+        const res = await axios.post('/api/auth/register', {
+            username: regForm.value.username,
+            first_name: regForm.value.first_name,
+            last_name: regForm.value.last_name,
+            email: regForm.value.email,
+            password: regForm.value.password,
+            phone_number: regForm.value.phone_number,
+        })
+        auth.setUser(res.data.user)
+        toast.add({
+            severity: 'success',
+            summary: 'Successfully Registered!',
+            life: 3000,
+        })
         router.push('/')
-    } catch (e) {
+    } catch (e: any) {
         error.value = e.response?.data?.error || 'Registration failed'
     } finally {
         loading.value = false
     }
-
-    await axios.post('/api/auth/register', {
-        username: regForm.value.username,
-        first_name: regForm.value.first_name,
-        last_name: regForm.value.last_name,
-        email: regForm.value.email,
-        password: regForm.value.password,
-        phone_number: regForm.value.phone_number
-    }).then(res => {
-        console.log('you ere registered!')
-    }).catch(error => {
-        console.log(error);
-    }).finally(() => loading.value = false);
 }
 </script>
 
-<style scoped>
+<template>
+    <div class="col-span-full min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md flex flex-col gap-4">
 
-</style>
+            <!-- Brand -->
+            <div class="flex flex-col items-center gap-2 mb-2">
+                <img :src="logo" alt="PagePulse" class="w-16 h-16 object-contain" />
+                <h1 class="text-2xl font-bold text-color">Page Pulse</h1>
+                <p class="text-surface-400 text-sm">Your personal book universe</p>
+            </div>
+
+            <!-- Tabs -->
+            <Tabs value="0">
+                <TabList>
+                    <Tab value="0">Sign In</Tab>
+                    <Tab value="1">Register</Tab>
+                </TabList>
+                <TabPanels>
+
+                    <!-- Login Tab -->
+                    <TabPanel value="0">
+                        <div class="flex flex-col gap-4 pt-4">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-sm font-medium text-color">Username</label>
+                                <InputText
+                                    v-model="loginForm.username"
+                                    placeholder="Enter username"
+                                    class="w-full"
+                                    @keydown.enter="doLogin"
+                                />
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-sm font-medium text-color">Password</label>
+                                <Password
+                                    v-model="loginForm.password"
+                                    :feedback="false"
+                                    toggleMask
+                                    placeholder="Enter password"
+                                    inputClass="w-full"
+                                    :pt="{ root: { class: 'w-full' }, input: { class: 'w-full' } }"
+                                    @keydown.enter="doLogin"
+                                />
+                            </div>
+                            <Button
+                                label="Sign In"
+                                icon="pi pi-sign-in"
+                                class="w-full"
+                                :loading="loading"
+                                @click="doLogin"
+                            />
+                        </div>
+                    </TabPanel>
+
+                    <!-- Register Tab -->
+                    <TabPanel value="1">
+                        <div class="flex flex-col gap-4 pt-4">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-sm font-medium text-color">Username</label>
+                                <InputText v-model="regForm.username" placeholder="Choose username" class="w-full" />
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="flex flex-col gap-1 flex-1">
+                                    <label class="text-sm font-medium text-color">First Name</label>
+                                    <InputText v-model="regForm.first_name" placeholder="First name" class="w-full" />
+                                </div>
+                                <div class="flex flex-col gap-1 flex-1">
+                                    <label class="text-sm font-medium text-color">Last Name</label>
+                                    <InputText v-model="regForm.last_name" placeholder="Last name" class="w-full" />
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-sm font-medium text-color">Email</label>
+                                <InputText v-model="regForm.email" type="email" placeholder="your@email.com" class="w-full" />
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-sm font-medium text-color">
+                                    Phone Number
+                                    <span class="text-surface-400 font-normal ml-1">(optional)</span>
+                                </label>
+                                <InputText v-model="regForm.phone_number" placeholder="Your phone number" class="w-full" />
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-sm font-medium text-color">Password</label>
+                                <Password
+                                    v-model="regForm.password"
+                                    toggleMask
+                                    placeholder="Create password"
+                                    inputClass="w-full"
+                                    :pt="{ root: { class: 'w-full' }, input: { class: 'w-full' } }"
+                                />
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-sm font-medium text-color">Confirm Password</label>
+                                <Password
+                                    v-model="regForm.confirm_password"
+                                    :feedback="false"
+                                    toggleMask
+                                    placeholder="Confirm password"
+                                    inputClass="w-full"
+                                    :pt="{ root: { class: 'w-full' }, input: { class: 'w-full' } }"
+                                />
+                            </div>
+                            <Button
+                                label="Create Account"
+                                icon="pi pi-user-plus"
+                                class="w-full"
+                                :loading="loading"
+                                @click="doRegister"
+                            />
+                        </div>
+                    </TabPanel>
+
+                </TabPanels>
+            </Tabs>
+
+            <!-- Error Message -->
+            <div v-if="error" class="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
+                <i class="pi pi-exclamation-circle text-red-500" />
+                <span class="text-sm text-red-600 dark:text-red-400">{{ error }}</span>
+            </div>
+
+        </div>
+    </div>
+</template>
