@@ -1,7 +1,7 @@
 FROM node:24-alpine
 
 # install sqlite3 package
-apk add sqlite
+RUN apk add sqlite
 
 # make the 'app' folder the current working directory
 WORKDIR /app

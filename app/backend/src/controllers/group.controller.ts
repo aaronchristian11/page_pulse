@@ -180,11 +180,11 @@ export const getGroupBooks = async (req: Request, res: Response) => {
 
 export const addGroupBook = async (req: Request, res: Response) => {
     const { groupId } = req.params;
-    const { book_isbn } = req.body;
+    const { book_id } = req.body;
 
     try {
         const existing = await knex('group_books')
-            .where({ group_id: groupId, book_isbn })
+            .where({ group_id: groupId, book_id })
             .whereNull('deleted_at')
             .first();
 
@@ -192,7 +192,7 @@ export const addGroupBook = async (req: Request, res: Response) => {
             return res.status(409).json({ error: 'Book already exists in this group.' });
         }
 
-        await knex('group_books').insert({ group_id: groupId, book_isbn });
+        await knex('group_books').insert({ group_id: groupId, book_id });
 
         res.status(201).json({ message: 'Book added to group.' });
     } catch (err: any) {

@@ -45,28 +45,48 @@
                     <TabPanel value="1">
                         <form @submit="doRegister">
                             <div class="mb-4">
-                                <label>Username</label>
-                                <InputText v-model="regForm.username"
-                                           placeholder="Choose username"
-                                           class="w-full"/>
-                            </div>
-                            <div class="mb-4">
-                                <label>First name</label>
+                                <label>First name <sup class="text-red text-sm">*</sup></label>
                                 <InputText v-model="regForm.first_name"
                                            placeholder="Choose username"
                                            class="w-full"/>
                             </div>
                             <div class="mb-4">
-                                <label>Last name</label>
+                                <label>Last name <sup class="text-red text-sm">*</sup></label>
                                 <InputText v-model="regForm.last_name"
                                            placeholder="Choose username"
                                            class="w-full"/>
                             </div>
                             <div class="mb-4">
-                                <label>Email</label>
+                                <label>Email <sup class="text-red text-sm">*</sup></label>
                                 <InputText v-model="regForm.email"
                                            type="email"
                                            placeholder="your@email.com"
+                                           class="w-full" />
+                            </div>
+                            <div class="mb-4">
+                                <label>Username <sup class="text-red text-sm">*</sup></label>
+                                <InputText v-model="regForm.username"
+                                           placeholder="Choose username"
+                                           class="w-full"/>
+                            </div>
+                            <div class="mb-4">
+                                <label>Password <sup class="text-red text-sm">*</sup></label>
+                                <Password v-model="regForm.password"
+                                          toggleMask
+                                          placeholder="Create password"
+                                          class="w-full" />
+                            </div>
+                            <div class="mb-4">
+                                <label>Confirm Password <sup class="text-red text-sm">*</sup></label>
+                                <Password v-model="regForm.confirm_password"
+                                          toggleMask
+                                          placeholder="Confirm Password"
+                                          class="w-full" />
+                            </div>
+                            <div class="mb-4">
+                                <label>Phone number</label>
+                                <InputText v-model="regForm.phone_number"
+                                           placeholder="Phone number"
                                            class="w-full" />
                             </div>
                             <div class="mb-4">
@@ -98,20 +118,6 @@
                                 <InputText v-model="regForm.address.postal_code"
                                            placeholder="Postal code"
                                            class="w-full" />
-                            </div>
-                            <div class="mb-4">
-                                <label>Password</label>
-                                <Password v-model="regForm.password"
-                                          toggleMask
-                                          placeholder="Create password"
-                                          class="w-full" />
-                            </div>
-                            <div class="mb-4">
-                                <label>Confirm Password</label>
-                                <Password v-model="regForm.confirm_password"
-                                          toggleMask
-                                          placeholder="Confirm Password"
-                                          class="w-full" />
                             </div>
                             <Button label="Create Account"
                                     icon="pi pi-user-plus"
