@@ -1,14 +1,10 @@
 import { Router } from 'express';
-import { getShelves, createShelf, renameShelf, deleteShelf, getShelfBooks, addBookToShelf, removeBookFromShelf } from '../controllers';
+import { getShelfBooks, addBookToShelf, removeBookFromShelf } from '../controllers/index.ts';
 
 const router = Router();
 
-router.get('/user/:userId', getShelves);
-router.post('/', createShelf);
-router.put('/:id', renameShelf);
-router.delete('/:id', deleteShelf);
-router.get('/:shelfId/books', getShelfBooks);
-router.post('/:shelfId/books', addBookToShelf);
-router.delete('/:shelfId/books/:bookId', removeBookFromShelf);
+router.get('/:userId/books', getShelfBooks);
+router.post('/book', addBookToShelf);
+router.delete('/book', removeBookFromShelf);
 
 export default router;
