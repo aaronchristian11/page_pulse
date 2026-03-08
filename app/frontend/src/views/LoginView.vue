@@ -165,19 +165,19 @@ async function doRegister() {
     }
     loading.value = true
 
-    try {
-        // 1. Component sends registration to backend API
-        const response = await axios.post('http://localhost:3000/api/register', regForm.value)
-
-        // 2. Component tells the store to save the user globally
-        auth.setUser(response.data)
-
-        router.push('/')
-    } catch (e) {
-        error.value = e.response?.data?.error || 'Registration failed'
-    } finally {
-        loading.value = false
-    }
+    // try {
+    //     // 1. Component sends registration to backend API
+    //     const response = await axios.post('http://localhost:3000/api/register', regForm.value)
+    //
+    //     // 2. Component tells the store to save the user globally
+    //     auth.setUser(response.data)
+    //
+    //     router.push('/')
+    // } catch (e) {
+    //     error.value = e.response?.data?.error || 'Registration failed'
+    // } finally {
+    //     loading.value = false
+    // }
 
     await axios.post('/api/auth/register', {
         username: regForm.value.username,

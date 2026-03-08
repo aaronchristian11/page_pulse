@@ -23,6 +23,9 @@ export const register = async (req: Request, res: Response) => {
     try {
         const hashed = await bcrypt.hash(password, 10);
         const [id] = await knex('users').insert({ username, first_name, last_name, email, password: hashed, phone_number });
+        const role = await knex('roles').whereILike('role', '%general%').first();
+        const permission = await knex('permissions').whereILike('permission', '%manage shelf%').first();
+        await knex('user_role_permissions').insert({ id, role_id: role.id, permission_id: permission.is })
         const user = await knex('users').where({ id }).first();
         const { password: _, ...safeUser } = user;
         res.status(201).json({ user: safeUser });

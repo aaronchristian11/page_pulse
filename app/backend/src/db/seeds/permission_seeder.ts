@@ -6,6 +6,8 @@ export async function seed(knex: Knex): Promise<void> {
 
     // Inserts seed entries
     await knex("permissions").insert([
-        { name: "Manage Users" }
+        { name: "Manage users" },
+        { name: "Manage groups" },
+        { name: "Manage shelf" }
     ]);
 };
