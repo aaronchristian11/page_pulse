@@ -1,38 +1,36 @@
-<template>
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useBooksStore } from '@/stores/books'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
+import InputText from 'primevue/inputtext'
+import Button from 'primevue/button'
 
-</template>
+const store = useBooksStore()
+const query = ref('')
 
-<script>
-import axios from 'axios';
-
-export default {
-    name: "Search",
-    data() {
-        return {
-            searchQuery: '',
-            books: []
-        }
-    },
-    methods: {
-        async getBooks() {
-            await axios.get('https://openlibrary.org/search.json', {
-                params: {
-                    q: this.searchQuery,
-                    limit: 20
-                },
-                headers: {
-                    'User-Agent': 'PagePulse/1.0'
-                }
-            }).then(res => {
-                if (res.num_found !== 0 && res.docs.length !== 0) {
-                    this.books = res.docs;
-                }
-            }).catch(error => console.log(error));
-        }
-    }
+async function handleSearch() {
+  if (!query.value.trim()) return
+  await store.searchBooks(query.value)
 }
 </script>
 
-<style scoped>
-
-</style>
+<template>
+  <div class="flex gap-2 w-full">
+    <IconField class="flex-1">
+      <InputIcon class="pi pi-search" />
+      <InputText
+        v-model="query"
+        placeholder="Search by title, author, genre…"
+        class="w-full"
+        @keydown.enter="handleSearch"
+      />
+    </IconField>
+    <Button
+      label="Search"
+      icon="pi pi-search"
+      :loading="store.isLoading"
+      @click="handleSearch"
+    />
+  </div>
+</template>
