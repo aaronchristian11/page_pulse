@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import {openLibraryApi} from '../api/open_library.api.ts';
 import knex from '../db/database.ts';
+import {AppError} from "../exceptions/AppError.ts";
 
 export const getShelfBooks = async (req: Request, res: Response) => {
     const { userId } = req.params;
@@ -30,7 +31,7 @@ export const addBookToShelf = async (req: Request, res: Response) => {
 
             const existing = await trx('user_books').where({ user_id: userId, book_id: book.id }).first();
             if (existing) {
-                return res.status(409).json({ error: 'Book already exists on the shelf.' });
+                throw new AppError('Book already exists on the shelf.', 409);
             }
 
             await trx('user_books').insert({ user_id: userId, book_id: book.id });
@@ -38,7 +39,7 @@ export const addBookToShelf = async (req: Request, res: Response) => {
 
         res.json({ message: 'The book has been added to the shelf.' });
     } catch (err: any) {
-        res.status(500).json({ error: 'Failed to add book to shelf.' });
+        res.status(err.statusCode || 500).json({ error: err.message || 'Failed to add book to shelf.' });
     }
 };
 
@@ -51,13 +52,13 @@ export const removeBookFromShelf = async (req: Request, res: Response) => {
             const book = await trx('books').where({ key: book_key }).first();
 
             if (!book) {
-                return res.status(404).json({ error: 'Book does not exist.' });
+                throw new AppError('Book does not exist.', 404);
             }
 
             const userBook = await trx('user_books').where({ user_id: userId, book_id: book.id }).first();
 
             if (!userBook) {
-                return res.status(404).json({ error: 'Book does not exist in your shelf.' });
+                throw new AppError('Book does not exist in your shelf.', 404);
             }
 
             await trx('user_books').where({ user_id: userId, book_id: book.id }).delete();
@@ -65,6 +66,6 @@ export const removeBookFromShelf = async (req: Request, res: Response) => {
 
         res.json({ message: 'The book has been removed from the shelf.' });
     } catch (err: any) {
-        res.status(500).json({ error: 'Failed to remove book from shelf.' });
+        res.status(err.statusCode || 500).json({ error: err.message || 'Failed to add book to shelf.' });
     }
 };
