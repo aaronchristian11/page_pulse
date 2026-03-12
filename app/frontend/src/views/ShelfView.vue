@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import { useBooksStore } from '@/stores/books'
-import BookDetail from '@/components/BookDetail.vue'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import type { Book } from '@/stores/books'
+    import {ref, onMounted} from 'vue';
+    import { useBooksStore } from '@/stores/books';
+    import BookDetail from '@/components/BookDetail.vue';
+    import Button from 'primevue/button';
+    import Card from 'primevue/card';
+    import type { Book } from '@/stores/books';
 
-const store = useBooksStore()
+    const store = useBooksStore()
 
-function openDetail(book: Book) {
-  store.selectBook(book)
-}
+    function openDetail(book: Book) {
+      store.selectBook(book)
+    }
+
+    onMounted(() => {
+        store.fetchShelf();
+    });
 </script>
 
 <template>

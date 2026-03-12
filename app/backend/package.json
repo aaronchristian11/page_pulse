@@ -10,6 +10,7 @@
   "author": "Aaron Christian, Jordan Tackaberry, Fahad Mughal, Stefan Salewski, Guillermo Rebolledo",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.13.6",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "express": "^5.2.1",

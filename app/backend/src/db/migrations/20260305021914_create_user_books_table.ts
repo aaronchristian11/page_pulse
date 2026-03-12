@@ -6,8 +6,8 @@ export async function up(knex: Knex): Promise<void> {
         table.increments('id').primary();
         table.integer('user_id').notNullable();
         table.foreign('user_id').references('users.id');
-        table.integer('book_id').nullable();
-        table.string('book_isbn').notNullable();
+        table.integer('book_id').notNullable().references('books.id');
+        table.string('book_isbn').nullable();
     });
 }
 

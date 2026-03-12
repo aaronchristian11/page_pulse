@@ -2,13 +2,23 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<{ username: string } | null>(null)
+    const user = ref<{ id: number, username: string } | null>(null)
 
-  // function just to update the state
-  const setUser = (userData: { username: string } | null) => {
-    user.value = userData
-  }
+    const setUser = (userData: { id: number, username: string } | null) => {
+        user.value = userData
 
-  // only return the user data and the ability to change it
-  return { user, setUser }
-})
+        if (userData) {
+            localStorage.setItem('user', JSON.stringify(userData));
+        } else {
+            localStorage.removeItem('user');
+        }
+    }
+
+    // rehydrate on page load
+    const init = () => {
+        const stored = localStorage.getItem('user');
+        if (stored) setUser(JSON.parse(stored));
+    }
+
+    return { user, setUser, init }
+});
