@@ -130,7 +130,7 @@ export const useBooksStore = defineStore('books', () => {
             router.push('login');
         } else {
             await axios.get(`/api/shelves/${user.value.id}/books`)
-                .then(res => shelf.value = res.data.books)
+                .then(res => shelf.value = res.data.books.map(toBook))
                 .catch(err => {
                     error.value = err.response?.data?.error || 'Failed to fetch shelf.';
                 });
