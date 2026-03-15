@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useBooksStore } from '@/stores/books'
+import { useGroupShelvesStore } from '@/stores/groupShelves'
 import Menubar from 'primevue/menubar'
 import Button from 'primevue/button'
 import Badge from 'primevue/badge'
@@ -10,10 +12,14 @@ import Toast from 'primevue/toast'
 const router = useRouter()
 const auth = useAuthStore()
 const books = useBooksStore()
+const groupShelves = useGroupShelvesStore()
+
+const joinedGroupCount = computed(() => groupShelves.joinedGroups.length)
 
 const menuItems = [
   { label: 'Catalogue', icon: 'pi pi-search', command: () => router.push('/') },
   { label: 'My Shelf', icon: 'pi pi-book', command: () => router.push('/shelf') },
+  { label: 'Group Shelves', icon: 'pi pi-users', command: () => router.push('/groups') },
 ]
 </script>
 
@@ -37,6 +43,17 @@ const menuItems = [
             v-if="books.shelf.length"
             :value="books.shelf.length"
             class="absolute -top-1 -right-1"
+            size="small"
+          />
+        </RouterLink>
+
+        <RouterLink to="/groups" class="relative inline-flex">
+          <Button icon="pi pi-users" severity="secondary" text rounded aria-label="Group Shelves" />
+          <Badge
+            v-if="joinedGroupCount"
+            :value="joinedGroupCount"
+            class="absolute -top-1 -right-1"
+            severity="contrast"
             size="small"
           />
         </RouterLink>

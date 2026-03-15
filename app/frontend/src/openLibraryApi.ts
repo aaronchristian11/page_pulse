@@ -51,7 +51,7 @@ export interface SearchOptions {
 }
 
 const headers = {
-  'User-Agent': 'PagePulse/1.0 (dev@pagepulse.app)',
+  'Accept': 'application/json',
 }
 
 async function apiFetch<T>(path: string, params?: Record<string, string | number>): Promise<T> {
