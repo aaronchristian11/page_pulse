@@ -4,7 +4,7 @@ import { getShelfBooks, addBookToShelf, removeBookFromShelf } from '../controlle
 const router = Router();
 
 router.get('/:userId/books', getShelfBooks);
-router.post('/book', addBookToShelf);
-router.delete('/book', removeBookFromShelf);
+router.post('/:userId/book', addBookToShelf);
+router.delete('/:userId/book', removeBookFromShelf);
 
 export default router;
