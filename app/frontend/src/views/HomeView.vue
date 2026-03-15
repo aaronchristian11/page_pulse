@@ -14,9 +14,7 @@ function openDetail(book: Book) {
 }
 
 onMounted(() => {
-    if (store.books.length === 0) {
-        store.searchBooks('');
-    }
+    store.searchBooks('');
 });
 </script>
 
@@ -33,7 +31,7 @@ onMounted(() => {
         <Search/>
 
         <!-- Results Count -->
-        <p v-if="store.totalResults && !store.isLoading" class="text-sm text-surface-400">
+        <p v-if="store.totalResults && !store.isLoading && store.searchQuery !== ''" class="text-sm text-surface-400">
             <span class="font-semibold text-color">{{ store.totalResults.toLocaleString() }}</span>
             results for "{{ store.searchQuery }}"
         </p>
@@ -63,7 +61,7 @@ onMounted(() => {
         </div>
 
         <!-- Empty State -->
-        <div v-else-if="!store.books.length && store.searchQuery"
+        <div v-else-if="!store.books && store.searchQuery"
              class="flex flex-col items-center gap-3 py-20 text-center">
             <i class="pi pi-search text-4xl text-surface-400"/>
             <p class="text-color font-semibold">No results found</p>
@@ -83,7 +81,7 @@ onMounted(() => {
         </div>
 
         <!-- Pagination -->
-        <div v-if="!store.isLoading && store.books.length"
+        <div v-if="!store.isLoading && store.books"
              class="flex items-center justify-center gap-4 pt-2">
             <Button
                 icon="pi pi-arrow-left"
@@ -103,7 +101,6 @@ onMounted(() => {
                 @click="store.searchBooks(store.searchQuery, store.currentPage + 1)"
             />
         </div>
-
     </main>
 
     <!-- Book Detail Drawer -->

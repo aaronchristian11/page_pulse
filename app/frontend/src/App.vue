@@ -19,6 +19,8 @@
     function logout() {
         auth.setUser(null);
         localStorage.removeItem('user');
+        books.setShelf(null);
+        router.push('/');
     }
 </script>
 
@@ -41,8 +43,8 @@
                     <Button icon="pi pi-book" severity="secondary" text rounded
                             aria-label="My Shelf"/>
                     <Badge
-                        v-if="books.shelf.length"
-                        :value="books.shelf.length"
+                        v-if="books.shelf"
+                        :value="books.shelf ? books.shelf.length : null"
                         class="absolute -top-1 -right-1"
                         size="small"
                     />

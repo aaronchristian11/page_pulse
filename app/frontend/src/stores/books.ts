@@ -41,10 +41,14 @@ export const useBooksStore = defineStore('books', () => {
     const currentPage = ref(1)
     const pageSize = 24
 
-    const shelf = ref<Book[]>([])
+    const shelf = ref<Book[] | null>([])
     const selectedBook = ref<Book | null>(null)
     const selectedWorkDetail = ref<any | null>(null)
     const isLoadingDetail = ref(false)
+
+    const setShelf = (userBooks: Book[]|null) => {
+        shelf.value = userBooks;
+    };
 
     async function searchBooks(query: string, page = 1) {
         isLoading.value = true;
@@ -138,7 +142,7 @@ export const useBooksStore = defineStore('books', () => {
     }
 
     function isOnShelf(bookId: string): boolean {
-        return shelf.value.some(b => b.id === bookId)
+        return shelf.value && shelf.value.some(b => b.id === bookId)
     }
 
     function coverUrl(coverId: number | null, size: 'S' | 'M' | 'L' = 'M'): string {
@@ -149,6 +153,6 @@ export const useBooksStore = defineStore('books', () => {
         books, searchQuery, isLoading, error, totalResults, currentPage, pageSize,
         shelf, selectedBook, selectedWorkDetail, isLoadingDetail,
         searchBooks, selectBook, clearSelectedBook,
-        addToShelf, removeFromShelf, isOnShelf, coverUrl, fetchShelf
+        addToShelf, removeFromShelf, isOnShelf, coverUrl, fetchShelf, setShelf
     }
 })
