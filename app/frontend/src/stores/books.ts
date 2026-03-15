@@ -101,7 +101,7 @@ export const useBooksStore = defineStore('books', () => {
         if (!user.value) {
             router.push('login');
         } else {
-            if (!shelf.value.find(b => b.id === book.id)) {
+            if (shelf.value && !shelf.value.find(b => b.id === book.id)) {
                 await axios.post(`/api/shelves/${user.value.id}/book`, {
                     book_key: book.id
                 }).then(() => {

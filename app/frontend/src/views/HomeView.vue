@@ -61,7 +61,7 @@ onMounted(() => {
         </div>
 
         <!-- Empty State -->
-        <div v-else-if="!store.books && store.searchQuery"
+        <div v-else-if="!(store.books && store.books.length) && store.searchQuery"
              class="flex flex-col items-center gap-3 py-20 text-center">
             <i class="pi pi-search text-4xl text-surface-400"/>
             <p class="text-color font-semibold">No results found</p>
@@ -81,7 +81,7 @@ onMounted(() => {
         </div>
 
         <!-- Pagination -->
-        <div v-if="!store.isLoading && store.books"
+        <div v-if="!store.isLoading && (store.books && store.books.length)"
              class="flex items-center justify-center gap-4 pt-2">
             <Button
                 icon="pi pi-arrow-left"

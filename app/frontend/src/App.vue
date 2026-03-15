@@ -43,7 +43,7 @@
                     <Button icon="pi pi-book" severity="secondary" text rounded
                             aria-label="My Shelf"/>
                     <Badge
-                        v-if="books.shelf"
+                        v-if="books.shelf && books.shelf.length"
                         :value="books.shelf ? books.shelf.length : null"
                         class="absolute -top-1 -right-1"
                         size="small"
