@@ -1,27 +1,32 @@
 <script setup lang="ts">
-    import {useRouter} from 'vue-router'
-    import {useAuthStore} from '@/stores/auth'
-    import {useBooksStore} from '@/stores/books'
-    import Menubar from 'primevue/menubar'
-    import Button from 'primevue/button'
-    import Badge from 'primevue/badge'
-    import Toast from 'primevue/toast'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { useBooksStore } from '@/stores/books'
+import { useGroupShelvesStore } from '@/stores/groupShelves'
+import Menubar from 'primevue/menubar'
+import Button from 'primevue/button'
+import Badge from 'primevue/badge'
+import Toast from 'primevue/toast'
 
-    const router = useRouter()
-    const auth = useAuthStore()
-    const books = useBooksStore()
+const router = useRouter()
+const auth = useAuthStore()
+const books = useBooksStore()
+const groupShelves = useGroupShelvesStore()
 
-    const menuItems = [
-        {label: 'Catalogue', icon: 'pi pi-search', command: () => router.push('/')},
-        {label: 'My Shelf', icon: 'pi pi-book', command: () => router.push('/shelf')},
-    ];
+const joinedGroupCount = computed(() => groupShelves.joinedGroups.length)
 
-    function logout() {
-        auth.setUser(null);
-        localStorage.removeItem('user');
-        books.setShelf(null);
-        router.push('/');
-    }
+const menuItems = [
+  { label: 'Catalogue', icon: 'pi pi-search', command: () => router.push('/') },
+  { label: 'My Shelf', icon: 'pi pi-book', command: () => router.push('/shelf') },
+  { label: 'Group Shelves', icon: 'pi pi-users', command: () => router.push('/groups') },
+]
+
+function logout() {
+  auth.setUser(null)
+  books.shelf = []
+  router.push('/')
+}
 </script>
 
 <template>
@@ -42,26 +47,37 @@
                 <RouterLink to="/shelf" class="relative inline-flex">
                     <Button icon="pi pi-book" severity="secondary" text rounded
                             aria-label="My Shelf"/>
-                    <Badge
-                        v-if="books.shelf && books.shelf.length"
-                        :value="books.shelf ? books.shelf.length : null"
+                    <Badge>
+                        if="books.shelf && books.shelf.length"
+                        value="books.shelf ? books.shelf.length : null"
                         class="absolute -top-1 -right-1"
                         size="small"
                     />
                 </RouterLink>
 
-                <!-- Logged in -->
-                <template v-if="auth.user">
-                    <span class="text-sm text-surface-400">{{ auth.user.username }}</span>
-                    <Button
-                        icon="pi pi-sign-out"
-                        severity="secondary"
-                        text
-                        rounded
-                        aria-label="Sign out"
-                        @click="logout"
-                    />
-                </template>
+        <RouterLink to="/groups" class="relative inline-flex">
+          <Button icon="pi pi-users" severity="secondary" text rounded aria-label="Group Shelves" />
+          <Badge
+            v-if="joinedGroupCount"
+            :value="joinedGroupCount"
+            class="absolute -top-1 -right-1"
+            severity="contrast"
+            size="small"
+          />
+        </RouterLink>
+
+        <!-- Logged in -->
+        <template v-if="auth.user">
+          <span class="text-sm text-surface-400">{{ auth.user.username }}</span>
+          <Button
+            icon="pi pi-sign-out"
+            severity="secondary"
+            text
+            rounded
+            aria-label="Sign out"
+            @click="logout"
+          />
+        </template>
 
                 <!-- Not logged in -->
                 <template v-else>

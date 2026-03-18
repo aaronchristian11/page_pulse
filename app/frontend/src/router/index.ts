@@ -22,6 +22,11 @@ const router = createRouter({
             component: () => import('@/views/ShelfView.vue'),
         },
         {
+            path: '/groups',
+            name: 'groups',
+            component: () => import('@/views/GroupShelvesView.vue'),
+        },
+        {
             path: '/book/:id',
             name: 'book',
             component: () => import('@/views/BookDetailView.vue'),
