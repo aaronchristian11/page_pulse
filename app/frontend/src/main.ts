@@ -10,7 +10,7 @@ import router from './router'
 import '@/assets/main.css'
 import axios from "axios";
 import { useAuthStore } from '@/stores/auth'
-++
+
 const app = createApp(App)
 
 app.use(createPinia())
