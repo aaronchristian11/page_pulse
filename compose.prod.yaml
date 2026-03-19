@@ -1,0 +1,28 @@
+services:
+  backend:
+    container_name: express_prod
+    build:
+      context: ./app/backend
+      dockerfile: Dockerfile.prod
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DB_PATH=/app/data/pagepulse.db
+      - PORT=3000
+      - NODE_ENV=production
+    restart: unless-stopped
+
+  frontend:
+    container_name: vue_prod
+    build:
+      context: ./app/frontend
+      dockerfile: Dockerfile.prod
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped

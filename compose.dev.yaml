@@ -1,0 +1,36 @@
+services:
+  backend:
+    container_name: express_dev
+    build:
+      context: ./app/backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./app/backend:/app
+      - /app/node_modules
+    environment:
+      - DB_PATH=/app/data/pagepulse.db
+      - PORT=3000
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    restart: unless-stopped
+    command: sh -c "npx tsx watch --clear-screen=false src/index.ts"
+
+  frontend:
+    container_name: vue_dev
+    build:
+      context: ./app/frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./app/frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+    command: sh -c "npm run dev"
