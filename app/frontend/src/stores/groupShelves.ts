@@ -20,129 +20,149 @@ export const useGroupShelvesStore = defineStore('groupShelves', () => {
   const activeGroupMembers = ref<GroupMember[]>([])
   const error = ref<string | null>(null)
 
+  const currentUserId = computed(() => auth.user?.id ?? null)
   const currentUsername = computed(() => auth.user?.username ?? null)
   const joinedGroups = computed(() => groups.value.filter((g) => g.isJoined))
   const activeGroup = computed(() => groups.value.find((g) => g.id === activeGroupId.value) ?? null)
-  const isActiveGroupAdmin = computed(
-    () => activeGroup.value?.currentUserRole === 'admin',
-  )
+  const isActiveGroupAdmin = computed(() => activeGroup.value?.currentUserRole === 'admin')
 
   function clearError() { error.value = null }
   function setError(err: unknown) {
     error.value = err instanceof Error ? err.message : 'Something went wrong.'
   }
 
-  function loadGroups() {
-    groups.value = groupShelvesApi.listGroups(currentUsername.value)
-    if (!groups.value.length) { activeGroupId.value = null; activeGroupBooks.value = []; return }
-    const hasActive = activeGroupId.value && groups.value.some((g) => g.id === activeGroupId.value)
-    if (!hasActive) activeGroupId.value = joinedGroups.value[0]?.id ?? groups.value[0]?.id ?? null
+  async function loadGroups() {
+    const fetched = await groupShelvesApi.listGroups(currentUserId.value)
+    // Enrich each group with membership info from the members list
+    const enriched = await Promise.all(
+      fetched.map(async (group) => {
+        const members = await groupShelvesApi.listGroupMembers(group.id)
+        const books = await groupShelvesApi.listGroupBooks(group.id)
+        const myMembership = members.find((m) => m.id === currentUserId.value) ?? null
+        return {
+          ...group,
+          isJoined: !!myMembership,
+          currentUserRole: myMembership?.role ?? null,
+          memberCount: members.length,
+          bookCount: books.length,
+        } as GroupSummary
+      })
+    )
+    groups.value = enriched
+    if (!enriched.length) { activeGroupId.value = null; activeGroupBooks.value = []; return }
+    const hasActive = activeGroupId.value && enriched.some((g) => g.id === activeGroupId.value)
+    if (!hasActive) {
+      activeGroupId.value = enriched.find((g) => g.isJoined)?.id ?? enriched[0]?.id ?? null
+    }
   }
 
-  function loadActiveGroupBooks() {
+  async function loadActiveGroupBooks() {
     if (!activeGroupId.value) { activeGroupBooks.value = []; return }
-    activeGroupBooks.value = groupShelvesApi.listGroupBooks(activeGroupId.value)
+    activeGroupBooks.value = await groupShelvesApi.listGroupBooks(activeGroupId.value)
   }
 
-  function loadActiveGroupMembers() {
+  async function loadActiveGroupMembers() {
     if (!activeGroupId.value) { activeGroupMembers.value = []; return }
-    activeGroupMembers.value = groupShelvesApi.listGroupMembers(activeGroupId.value)
+    activeGroupMembers.value = await groupShelvesApi.listGroupMembers(activeGroupId.value)
   }
 
-  function refresh() {
-    loadGroups()
-    loadActiveGroupBooks()
-    loadActiveGroupMembers()
+  async function refresh() {
+    await loadGroups()
+    await loadActiveGroupBooks()
+    await loadActiveGroupMembers()
   }
 
-  function selectGroup(groupId: string) {
+  async function selectGroup(groupId: string) {
     clearError()
     activeGroupId.value = groupId
-    loadActiveGroupBooks()
-    loadActiveGroupMembers()
+    await loadActiveGroupBooks()
+    await loadActiveGroupMembers()
   }
 
-  function createGroup(name: string, description: string) {
+  async function createGroup(name: string, description: string) {
+    if (!currentUserId.value) throw new Error('Sign in to create a group.')
     clearError()
     try {
-      const group = groupShelvesApi.createGroup(name, description, currentUsername.value)
-      loadGroups()
-      activeGroupId.value = group.id
-      loadActiveGroupBooks()
-      loadActiveGroupMembers()
-      return group
+      const result = await groupShelvesApi.createGroup(name, description, currentUserId.value)
+      await loadGroups()
+      activeGroupId.value = result.id
+      await loadActiveGroupBooks()
+      await loadActiveGroupMembers()
+      return result
     } catch (err) { setError(err); throw err }
   }
 
-  function joinGroup(groupId: string) {
+  async function joinGroup(groupId: string) {
+    if (!currentUserId.value) throw new Error('Sign in to join a group.')
     clearError()
     try {
-      groupShelvesApi.joinGroup(groupId, currentUsername.value)
-      loadGroups()
+      await groupShelvesApi.joinGroup(groupId, currentUserId.value)
+      await loadGroups()
       activeGroupId.value = groupId
-      loadActiveGroupBooks()
-      loadActiveGroupMembers()
+      await loadActiveGroupBooks()
+      await loadActiveGroupMembers()
     } catch (err) { setError(err); throw err }
   }
 
-  function removeMember(targetUsername: string) {
+  async function addMember(username: string) {
     if (!activeGroupId.value) throw new Error('No active group.')
     clearError()
     try {
-      groupShelvesApi.removeMember(activeGroupId.value, targetUsername, currentUsername.value)
-      loadGroups()
-      loadActiveGroupMembers()
-      loadActiveGroupBooks()
+      await groupShelvesApi.addMemberByUsername(activeGroupId.value, username)
+      await loadGroups()
+      await loadActiveGroupMembers()
     } catch (err) { setError(err); throw err }
   }
 
-  function promoteToAdmin(targetUsername: string) {
+  async function removeMember(targetUserId: number) {
     if (!activeGroupId.value) throw new Error('No active group.')
     clearError()
     try {
-      groupShelvesApi.promoteToAdmin(activeGroupId.value, targetUsername, currentUsername.value)
-      loadGroups()
-      loadActiveGroupMembers()
+      await groupShelvesApi.removeMember(activeGroupId.value, targetUserId)
+      await loadGroups()
+      await loadActiveGroupMembers()
+      await loadActiveGroupBooks()
     } catch (err) { setError(err); throw err }
   }
 
-  function addBookToActiveGroup(book: Book, note: string) {
+  async function promoteToAdmin(targetUserId: number) {
+    if (!activeGroupId.value) throw new Error('No active group.')
+    clearError()
+    try {
+      await groupShelvesApi.promoteToAdmin(activeGroupId.value, targetUserId)
+      await loadGroups()
+      await loadActiveGroupMembers()
+    } catch (err) { setError(err); throw err }
+  }
+
+  async function addBookToActiveGroup(book: Book, note: string) {
     if (!activeGroupId.value) { const e = new Error('Choose a group first.'); setError(e); throw e }
     clearError()
     try {
-      const entry = groupShelvesApi.addGroupBook(activeGroupId.value, currentUsername.value, book, note)
-      loadGroups(); loadActiveGroupBooks()
-      return entry
+      await groupShelvesApi.addGroupBook(activeGroupId.value, book.id)
+      await loadGroups()
+      await loadActiveGroupBooks()
     } catch (err) { setError(err); throw err }
   }
 
-  function updateActiveGroupBook(groupBookId: string, note: string) {
+  async function removeActiveGroupBook(groupBookId: string) {
     if (!activeGroupId.value) { const e = new Error('Choose a group first.'); setError(e); throw e }
     clearError()
     try {
-      const entry = groupShelvesApi.updateGroupBook(activeGroupId.value, groupBookId, currentUsername.value, note)
-      loadGroups(); loadActiveGroupBooks()
-      return entry
+      await groupShelvesApi.removeGroupBook(activeGroupId.value, groupBookId)
+      await loadGroups()
+      await loadActiveGroupBooks()
     } catch (err) { setError(err); throw err }
   }
 
-  function removeActiveGroupBook(groupBookId: string) {
-    if (!activeGroupId.value) { const e = new Error('Choose a group first.'); setError(e); throw e }
-    clearError()
-    try {
-      groupShelvesApi.removeGroupBook(activeGroupId.value, groupBookId, currentUsername.value)
-      loadGroups(); loadActiveGroupBooks()
-    } catch (err) { setError(err); throw err }
-  }
-
-  watch(currentUsername, refresh, { immediate: true })
+  watch(currentUserId, () => { refresh() }, { immediate: true })
 
   return {
     groups, activeGroupId, activeGroup, activeGroupBooks, activeGroupMembers,
-    joinedGroups, error, isActiveGroupAdmin,
-    refresh, selectGroup, createGroup, joinGroup,
+    joinedGroups, error, isActiveGroupAdmin, currentUsername,
+    refresh, selectGroup, createGroup, joinGroup, addMember,
     removeMember, promoteToAdmin,
-    addBookToActiveGroup, updateActiveGroupBook, removeActiveGroupBook,
+    addBookToActiveGroup, removeActiveGroupBook,
     clearError,
   }
 })

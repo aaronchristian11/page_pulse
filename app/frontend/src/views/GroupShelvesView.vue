@@ -33,6 +33,11 @@ const bookDialogNote = ref('')
 const bookDialogBook = ref<Book | null>(null)
 const editingEntry = ref<GroupBookEntry | null>(null)
 
+// Add member dialog
+const addMemberDialogVisible = ref(false)
+const addMemberUsername = ref('')
+const addMemberLoading = ref(false)
+
 // Create group dialog
 const createDialogVisible = ref(false)
 const createGroupName = ref('')
@@ -78,7 +83,7 @@ function openBookDetail(book: Book) {
 async function joinGroup(groupId: string) {
   if (!auth.user) { promptSignIn('Sign in to join a group.'); return }
   try {
-    groups.joinGroup(groupId)
+    await groups.joinGroup(groupId)
     toast.add({ severity: 'success', summary: 'Joined group!', life: 2500 })
     activeTab.value = 'shelf'
   } catch (err: unknown) {
@@ -93,7 +98,7 @@ async function submitCreateGroup() {
   }
   createGroupLoading.value = true
   try {
-    groups.createGroup(createGroupName.value, createGroupDesc.value)
+    await groups.createGroup(createGroupName.value, createGroupDesc.value)
     toast.add({ severity: 'success', summary: `Group "${createGroupName.value}" created!`, life: 2500 })
     createDialogVisible.value = false
     createGroupName.value = ''
@@ -103,6 +108,24 @@ async function submitCreateGroup() {
     toast.add({ severity: 'error', summary: err instanceof Error ? err.message : 'Unable to create group.', life: 3000 })
   } finally {
     createGroupLoading.value = false
+  }
+}
+
+async function submitAddMember() {
+  if (!addMemberUsername.value.trim()) {
+    toast.add({ severity: 'warn', summary: 'Username is required.', life: 2500 })
+    return
+  }
+  addMemberLoading.value = true
+  try {
+    await groups.addMember(addMemberUsername.value.trim())
+    toast.add({ severity: 'success', summary: `${addMemberUsername.value} added to group!`, life: 2500 })
+    addMemberDialogVisible.value = false
+    addMemberUsername.value = ''
+  } catch (err: unknown) {
+    toast.add({ severity: 'error', summary: err instanceof Error ? err.message : 'Failed to add member.', life: 3000 })
+  } finally {
+    addMemberLoading.value = false
   }
 }
 
@@ -296,7 +319,19 @@ function initials(username: string) {
           <template #title>
             <div class="flex items-center justify-between">
               <h2 class="text-base font-semibold text-color">Members</h2>
-              <Tag :value="`${activeGroup.memberCount}`" severity="secondary" />
+              <div class="flex items-center gap-2">
+                <Tag :value="`${activeGroup.memberCount}`" severity="secondary" />
+                <Button
+                  v-if="isAdmin"
+                  v-tooltip.top="'Add member'"
+                  icon="pi pi-user-plus"
+                  severity="secondary"
+                  text
+                  rounded
+                  size="small"
+                  @click="addMemberDialogVisible = true"
+                />
+              </div>
             </div>
           </template>
           <template #content>
@@ -687,4 +722,28 @@ function initials(username: string) {
   </Dialog>
 
   <BookDetail />
+    <!--Add Member Dialog  -->
+  <Dialog
+    v-model:visible="addMemberDialogVisible"
+    modal
+    header="Add a member"
+    class="w-[92vw] max-w-md"
+  >
+    <div class="flex flex-col gap-4 pt-2">
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-medium text-color" for="add-member-username">Username</label>
+        <InputText
+          id="add-member-username"
+          v-model="addMemberUsername"
+          placeholder="Enter their username"
+          class="w-full"
+          @keydown.enter="submitAddMember"
+        />
+      </div>
+      <div class="flex justify-end gap-2">
+        <Button label="Cancel" severity="secondary" text @click="addMemberDialogVisible = false" />
+        <Button label="Add Member" icon="pi pi-user-plus" :loading="addMemberLoading" @click="submitAddMember" />
+      </div>
+    </div>
+  </Dialog>
 </template>
