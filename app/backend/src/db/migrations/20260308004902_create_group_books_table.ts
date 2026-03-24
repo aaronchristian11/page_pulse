@@ -6,6 +6,7 @@ export async function up(knex: Knex): Promise<void> {
         table.increments('id').primary();
         table.integer('group_id').notNullable().references('groups.id');
         table.string('book_id').notNullable().references('books.id');
+        table.string('user_id').notNullable().references('users.id');
         table.timestamp('deleted_at').nullable();
     });
 }
