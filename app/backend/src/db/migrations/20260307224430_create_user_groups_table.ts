@@ -8,6 +8,7 @@ export async function up(knex: Knex): Promise<void> {
         table.foreign('user_id').references('users.id');
         table.integer('group_id').notNullable();
         table.foreign('group_id').references('groups.id');
+        table.integer('role_permission_id').notNullable().references('role_permissions.id');
     });
 }
 

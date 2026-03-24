@@ -42,6 +42,45 @@ export const hasPermission = (permission: string) => {
     };
 };
 
+export const hasGroupPermission = (permission: string) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const user = req.user as User;
+        const group_id = req.params.group_id || req.params.id;
+
+        const user_group_permission = await knex('user_groups')
+            .join('role_permissions', 'user_groups.role_permission_id', 'role_permissions.id')
+            .join('permissions', 'role_permissions.permission_id', 'permissions.id')
+            .where('user_groups.user_id', user.id)
+            .where('user_groups.group_id', group_id)
+            .where('permissions.name', permission)
+            .first();
+
+        if (!user_group_permission) {
+            return res.status(403).json({ error: 'Forbidden.' });
+        }
+
+        next();
+    };
+};
+
+export const isGroupAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user as User;
+    const group_id = req.params.groupId || req.params.id;
+
+    const admin_check = await knex('user_groups')
+        .join('role_permissions', 'user_groups.role_permission_id', 'role_permissions.id')
+        .join('roles', 'role_permissions.role_id', 'roles.id')
+        .where('user_groups.user_id', user.id)
+        .where('user_groups.group_id', group_id)
+        .where('roles.name', 'administrator')
+        .first();
+
+    if (!admin_check) {
+        return res.status(403).json({ error: 'Forbidden. You must be a group admin.' });
+    }
+
+    next();
+};
 
 /*
 Commenting this cross-user check for now
