@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import {ref, onMounted} from 'vue';
 import {useBooksStore} from '@/stores/books';
+import { useGroupShelvesStore } from '@/stores/groupShelves';
 import Search from '@/components/Search.vue';
 import BookCard from '@/components/BookCard.vue';
 import BookDetail from '@/components/BookDetail.vue';
 import Button from 'primevue/button';
+import { useRouter } from 'vue-router';
 import type {Book} from '@/stores/books';
 
 const store = useBooksStore()
+const groups = useGroupShelvesStore()
+const router = useRouter()
 
 function openDetail(book: Book) {
     store.selectBook(book);
@@ -22,9 +26,21 @@ onMounted(() => {
     <main class="flex flex-col gap-6 p-6">
 
         <!-- Page Header -->
-        <div class="flex flex-col gap-1">
-            <h1 class="text-3xl font-bold text-color">Book Catalogue</h1>
-            <p class="text-surface-400 text-sm">Search and discover books from the Open Library</p>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div class="flex flex-col gap-1">
+              <h1 class="text-3xl font-bold text-color">Book Catalogue</h1>
+              <p class="text-surface-400 text-sm">Search and discover books from the Open Library</p>
+          </div>
+
+          <!-- Groups CTA -->
+          <Button
+            :label="groups.joinedGroups.length ? `My Groups (${groups.joinedGroups.length})` : 'Group Shelves'"
+            icon="pi pi-users"
+            :badge="groups.joinedGroups.length ? String(groups.joinedGroups.length) : undefined"
+            severity="secondary"
+            outlined
+            @click="router.push('/groups')"
+          />
         </div>
 
         <!-- Search Bar -->
@@ -106,4 +122,3 @@ onMounted(() => {
     <!-- Book Detail Drawer -->
     <BookDetail/>
 </template>
-

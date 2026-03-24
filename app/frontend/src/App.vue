@@ -47,9 +47,9 @@ function logout() {
                 <RouterLink to="/shelf" class="relative inline-flex">
                     <Button icon="pi pi-book" severity="secondary" text rounded
                             aria-label="My Shelf"/>
-                    <Badge>
-                        if="books.shelf && books.shelf.length"
-                        value="books.shelf ? books.shelf.length : null"
+                    <Badge
+                        v-if="books.shelf && books.shelf.length"
+                        :value="books.shelf.length"
                         class="absolute -top-1 -right-1"
                         size="small"
                     />
