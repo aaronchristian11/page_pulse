@@ -105,7 +105,11 @@ export const useBooksStore = defineStore('books', () => {
                 await axios.post(`/api/shelves/${user.value.id}/book`, {
                     book_key: book.id
                 }).then(() => {
-                    shelf.value.push(book);
+                    if (shelf.value) {
+                      shelf.value.push(book);
+                    } else {
+                      shelf.value = [book];
+                    }
                 }).catch(err => {
                     error.value = err.response?.data?.error || 'Failed to add book to shelf.';
                 });
@@ -119,10 +123,12 @@ export const useBooksStore = defineStore('books', () => {
         } else {
             await axios.delete(`/api/shelves/${user.value.id}/book`, {
                 data: {
-                    book_key: shelf.value.find(b => b.id === bookId)?.id
+                    book_key: bookId
                 }
             }).then(() => {
-                shelf.value = shelf.value.filter(b => b.id !== bookId);
+                if (shelf.value) {
+                    shelf.value = shelf.value.filter(b => b.id !== bookId);
+                }
             }).catch(err => {
                 error.value = err.response?.data?.error || 'Failed to remove book from shelf.';
             });

@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import type { User } from '../types/express.d.ts';
-import knex from '../db/database.ts';
+import type { User } from '../types/express.js';
+import knex from '../db/database.js';
 
 export const isAuthenticated = async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.headers['x-user-id'];
@@ -45,14 +45,18 @@ export const hasPermission = (permission: string) => {
 export const hasGroupPermission = (permission: string) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         const user = req.user as User;
-        const group_id = req.params.group_id || req.params.id;
+        const group_id = req.params.groupId || req.params.group_id || req.params.id;
+
+        if (!group_id) {
+            return res.status(400).json({ error: 'Group ID is missing.' });
+        }
 
         const user_group_permission = await knex('user_groups')
             .join('role_permissions', 'user_groups.role_permission_id', 'role_permissions.id')
             .join('permissions', 'role_permissions.permission_id', 'permissions.id')
             .where('user_groups.user_id', user.id)
             .where('user_groups.group_id', group_id)
-            .where('permissions.name', permission)
+            .whereRaw('LOWER(permissions.name) = LOWER(?)', [permission])
             .first();
 
         if (!user_group_permission) {
@@ -67,12 +71,16 @@ export const isGroupAdmin = async (req: Request, res: Response, next: NextFuncti
     const user = req.user as User;
     const group_id = req.params.groupId || req.params.id;
 
+    if (!group_id) {
+        return res.status(400).json({ error: 'Group ID is missing.' });
+    }
+
     const admin_check = await knex('user_groups')
         .join('role_permissions', 'user_groups.role_permission_id', 'role_permissions.id')
         .join('roles', 'role_permissions.role_id', 'roles.id')
         .where('user_groups.user_id', user.id)
         .where('user_groups.group_id', group_id)
-        .where('roles.name', 'administrator')
+        .whereRaw('LOWER(roles.name) = ?', ['admin'])
         .first();
 
     if (!admin_check) {

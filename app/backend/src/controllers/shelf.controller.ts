@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
-import {openLibraryApi} from '../api/open_library.api.ts';
-import knex from '../db/database.ts';
-import {AppError} from "../exceptions/AppError.ts";
+import {openLibraryApi} from '../api/open_library.api.js';
+import knex from '../db/database.js';
+import {AppError} from "../exceptions/AppError.js";
 
 export const getShelfBooks = async (req: Request, res: Response) => {
     const { userId } = req.params;

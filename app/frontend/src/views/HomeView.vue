@@ -1,25 +1,30 @@
 <script setup lang="ts">
-import {ref, onMounted} from 'vue';
-import {useBooksStore} from '@/stores/books';
+import { onMounted, watch } from 'vue';
+import { useBooksStore } from '@/stores/books';
+import { useAuthStore } from '@/stores/auth';
 import { useGroupShelvesStore } from '@/stores/groupShelves';
 import Search from '@/components/Search.vue';
 import BookCard from '@/components/BookCard.vue';
 import BookDetail from '@/components/BookDetail.vue';
 import Button from 'primevue/button';
 import { useRouter } from 'vue-router';
-import type {Book} from '@/stores/books';
+import type { Book } from '@/stores/books';
 
 const store = useBooksStore()
+const auth = useAuthStore()
 const groups = useGroupShelvesStore()
 const router = useRouter()
 
 function openDetail(book: Book) {
-    store.selectBook(book);
+  store.selectBook(book);
 }
 
-onMounted(() => {
-    store.searchBooks('');
-});
+function refresh() {
+  store.searchBooks(store.searchQuery || '');
+}
+
+onMounted(refresh)
+watch(() => auth.user?.id, refresh)
 </script>
 
 <template>

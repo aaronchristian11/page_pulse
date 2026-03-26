@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import authRoutes from './auth.route.ts';
-import shelfRoutes from './shelf.route.ts';
-import groupRoutes from './group.route.ts';
-import openLibraryRoutes from './open_library.route.ts';
-import usersRouter from './users.route.ts';
-import { isAuthenticated, hasPermission } from '../middlewares/auth.middleware.ts';
+import authRoutes from './auth.route.js';
+import shelfRoutes from './shelf.route.js';
+import groupRoutes from './group.route.js';
+import openLibraryRoutes from './open_library.route.js';
+import usersRouter from './users.route.js';
+import { isAuthenticated, hasPermission } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 

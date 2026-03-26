@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, watch, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useAuthStore } from '@/stores/auth'
 import { useBooksStore, type Book } from '@/stores/books'
-import { useGroupShelvesStore, type GroupBookEntry } from '@/stores/groupShelves'
+import { useGroupShelvesStore, type GroupBookEntry, type GroupMember } from '@/stores/groupShelves'
 import BookDetail from '@/components/BookDetail.vue'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
@@ -17,6 +17,7 @@ import { useConfirm } from 'primevue/useconfirm'
 import Avatar from 'primevue/avatar'
 
 const router = useRouter()
+const route = useRoute()
 const toast = useToast()
 const confirm = useConfirm()
 const auth = useAuthStore()
@@ -32,6 +33,7 @@ const bookDialogVisible = ref(false)
 const bookDialogNote = ref('')
 const bookDialogBook = ref<Book | null>(null)
 const editingEntry = ref<GroupBookEntry | null>(null)
+const isSavingRecommendation = ref(false)
 
 // Add member dialog
 const addMemberDialogVisible = ref(false)
@@ -56,17 +58,62 @@ const bookDialogTitle = computed(() =>
   editingEntry.value ? 'Update your note' : bookDialogBook.value ? `Add "${bookDialogBook.value.title}"` : 'Add a book',
 )
 
-// ─── watchers ─────────────────────────────────────────────────────────────────
+// ─── watchers & lifecycle ──────────────────────────────────────────────────
+let isInitializing = false
+async function initData() {
+  if (isInitializing) return
+  isInitializing = true
+  try {
+    if (auth.user) {
+      await groups.refresh()
+      if (route.params.groupId) {
+        await groups.selectGroup(route.params.groupId as string)
+      }
+    } else {
+      await groups.loadGroups()
+    }
+  } finally {
+    isInitializing = false
+  }
+}
+
+onMounted(() => {
+  initData()
+})
+
+watch(
+  () => auth.user?.id,
+  () => { initData() }
+)
+
+watch(
+  () => route.params.groupId,
+  async (newGroupId) => {
+    if (newGroupId) {
+      await groups.selectGroup(newGroupId as string)
+      activeTab.value = 'shelf'
+    } else {
+      groups.setActiveGroupId(null)
+    }
+  }
+)
+
+watch(activeTab, async (newTab) => {
+  if (newTab === 'discover' && activeGroup.value) {
+    const query = activeGroup.value.discoveryQuery || 'trending'
+    await books.searchBooks(query)
+  }
+})
+
 watch(
   () => activeGroup.value?.id,
   async (groupId) => {
     if (!groupId || !activeGroup.value?.isJoined) return
-    searchQuery.value = activeGroup.value.discoveryQuery
+    searchQuery.value = activeGroup.value.discoveryQuery || ''
     if (!books.searchQuery || books.searchQuery !== activeGroup.value.discoveryQuery) {
-      await books.searchBooks(activeGroup.value.discoveryQuery)
+      await books.searchBooks(activeGroup.value.discoveryQuery || '')
     }
-  },
-  { immediate: true },
+  }
 )
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -86,9 +133,15 @@ async function joinGroup(groupId: string) {
     await groups.joinGroup(groupId)
     toast.add({ severity: 'success', summary: 'Joined group!', life: 2500 })
     activeTab.value = 'shelf'
+    router.push(`/groups/${groupId}`)
   } catch (err: unknown) {
-    toast.add({ severity: 'error', summary: err instanceof Error ? err.message : 'Unable to join.', life: 3000 })
+    const message = err instanceof Error ? err.message : 'Unable to join.'
+    toast.add({ severity: 'error', summary: message, life: 3000 })
   }
+}
+
+async function selectGroup(groupId: string) {
+  router.push(`/groups/${groupId}`)
 }
 
 async function submitCreateGroup() {
@@ -101,11 +154,14 @@ async function submitCreateGroup() {
     await groups.createGroup(createGroupName.value, createGroupDesc.value)
     toast.add({ severity: 'success', summary: `Group "${createGroupName.value}" created!`, life: 2500 })
     createDialogVisible.value = false
+    const newGroupId = groups.activeGroupId
     createGroupName.value = ''
     createGroupDesc.value = ''
     activeTab.value = 'shelf'
+    if (newGroupId) router.push(`/groups/${newGroupId}`)
   } catch (err: unknown) {
-    toast.add({ severity: 'error', summary: err instanceof Error ? err.message : 'Unable to create group.', life: 3000 })
+    const message = err instanceof Error ? err.message : 'Unable to create group.'
+    toast.add({ severity: 'error', summary: message, life: 3000 })
   } finally {
     createGroupLoading.value = false
   }
@@ -130,18 +186,18 @@ async function submitAddMember() {
 }
 
 // ─── member actions ───────────────────────────────────────────────────────────
-function confirmRemoveMember(username: string) {
+function confirmRemoveMember(member: GroupMember) {
   confirm.require({
-    message: `Remove ${username} from the group? Their book recommendations will also be deleted.`,
+    message: `Remove ${member.username} from the group? Their book recommendations will also be deleted.`,
     header: 'Remove member',
     icon: 'pi pi-exclamation-triangle',
     rejectLabel: 'Cancel',
     acceptLabel: 'Remove',
     acceptClass: 'p-button-danger',
-    accept: () => {
+    accept: async () => {
       try {
-        groups.removeMember(username)
-        toast.add({ severity: 'success', summary: `${username} removed.`, life: 2500 })
+        await groups.removeMember(member.id)
+        toast.add({ severity: 'success', summary: `${member.username} removed.`, life: 2500 })
       } catch (err: unknown) {
         toast.add({ severity: 'error', summary: err instanceof Error ? err.message : 'Failed to remove.', life: 3000 })
       }
@@ -149,17 +205,17 @@ function confirmRemoveMember(username: string) {
   })
 }
 
-function confirmPromoteAdmin(username: string) {
+function confirmPromoteAdmin(member: GroupMember) {
   confirm.require({
-    message: `Make ${username} the new admin? You will become a regular member.`,
+    message: `Make ${member.username} the new admin? You will become a regular member.`,
     header: 'Transfer admin',
     icon: 'pi pi-shield',
     rejectLabel: 'Cancel',
     acceptLabel: 'Transfer',
-    accept: () => {
+    accept: async () => {
       try {
-        groups.promoteToAdmin(username)
-        toast.add({ severity: 'success', summary: `${username} is now admin.`, life: 2500 })
+        await groups.promoteToAdmin(member.id)
+        toast.add({ severity: 'success', summary: `${member.username} is now admin.`, life: 2500 })
       } catch (err: unknown) {
         toast.add({ severity: 'error', summary: err instanceof Error ? err.message : 'Failed to promote.', life: 3000 })
       }
@@ -192,33 +248,42 @@ function openEditDialog(entry: GroupBookEntry) {
 
 function closeBookDialog() {
   bookDialogVisible.value = false
-  bookDialogBook.value = null
-  editingEntry.value = null
-  bookDialogNote.value = ''
+  // Timeout to prevent flickering during dialog close animation
+  setTimeout(() => {
+    bookDialogBook.value = null
+    editingEntry.value = null
+    bookDialogNote.value = ''
+  }, 200)
 }
 
-function saveRecommendation() {
+async function saveRecommendation() {
   if (!bookDialogBook.value) return
+  isSavingRecommendation.value = true
   try {
     if (editingEntry.value) {
-      groups.updateActiveGroupBook(editingEntry.value.id, bookDialogNote.value)
+      await groups.updateActiveGroupBook(editingEntry.value.id, bookDialogNote.value)
       toast.add({ severity: 'success', summary: 'Recommendation updated', life: 2500 })
     } else {
-      groups.addBookToActiveGroup(bookDialogBook.value, bookDialogNote.value)
+      await groups.addBookToActiveGroup(bookDialogBook.value, bookDialogNote.value)
       toast.add({ severity: 'success', summary: 'Book added to group shelf', life: 2500 })
     }
-    closeBookDialog()
+    bookDialogVisible.value = false
+    activeTab.value = 'shelf'
   } catch (err: unknown) {
-    toast.add({ severity: 'error', summary: err instanceof Error ? err.message : 'Unable to save.', life: 3500 })
+    const message = err instanceof Error ? err.message : 'Unable to save.'
+    toast.add({ severity: 'error', summary: message, life: 3500 })
+  } finally {
+    isSavingRecommendation.value = false
   }
 }
 
-function removeBook(entry: GroupBookEntry) {
+async function removeBook(entry: GroupBookEntry) {
   try {
-    groups.removeActiveGroupBook(entry.id)
+    await groups.removeActiveGroupBook(entry.id)
     toast.add({ severity: 'success', summary: 'Book removed', life: 2500 })
   } catch (err: unknown) {
-    toast.add({ severity: 'error', summary: err instanceof Error ? err.message : 'Unable to remove.', life: 3500 })
+    const message = err instanceof Error ? err.message : 'Unable to remove.'
+    toast.add({ severity: 'error', summary: message, life: 3500 })
   }
 }
 
@@ -238,7 +303,7 @@ function initials(username: string) {
 <template>
   <ConfirmDialog />
 
-  <main class="flex flex-col gap-6 p-6 max-w-6xl mx-auto">
+  <main class="flex flex-col gap-6 p-6 max-w-6xl mx-auto min-h-screen">
 
     <!-- ── Page Header ─────────────────────────────────────────────────────── -->
     <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -277,8 +342,16 @@ function initials(username: string) {
       </template>
     </Card>
 
+    <!-- ── Loading state ─────────────────────────────────────────────────── -->
+    <div v-if="groups.isLoading && !groups.groups.length" class="flex flex-col gap-6">
+        <div class="h-10 w-48 rounded bg-surface-100 animate-pulse dark:bg-surface-800" />
+        <div class="grid gap-4 md:grid-cols-2">
+            <div v-for="n in 4" :key="n" class="h-40 rounded-xl bg-surface-100 animate-pulse dark:bg-surface-800" />
+        </div>
+    </div>
+
     <!-- ── Two-column layout when a group is active ───────────────────────── -->
-    <div v-if="activeGroup?.isJoined" class="flex flex-col gap-6 lg:flex-row lg:items-start">
+    <div v-else-if="activeGroup?.isJoined" class="flex flex-col gap-6 lg:flex-row lg:items-start">
 
       <!-- LEFT: sidebar – group list + members ───────────────────────────── -->
       <aside class="flex flex-col gap-4 lg:w-72 lg:flex-shrink-0">
@@ -299,7 +372,7 @@ function initials(username: string) {
                     ? 'bg-primary text-white'
                     : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-color',
                 ]"
-                @click="groups.selectGroup(group.id); activeTab = 'shelf'"
+                @click="selectGroup(group.id)"
               >
                 <i class="pi pi-users text-sm" />
                 <span class="flex-1 font-medium text-sm truncate">{{ group.name }}</span>
@@ -363,7 +436,7 @@ function initials(username: string) {
                     text
                     rounded
                     size="small"
-                    @click="confirmPromoteAdmin(member.username)"
+                    @click="confirmPromoteAdmin(member)"
                   />
                   <Button
                     v-tooltip.top="'Remove member'"
@@ -372,7 +445,7 @@ function initials(username: string) {
                     text
                     rounded
                     size="small"
-                    @click="confirmRemoveMember(member.username)"
+                    @click="confirmRemoveMember(member)"
                   />
                 </div>
               </div>
@@ -430,9 +503,8 @@ function initials(username: string) {
             <Card v-for="entry in groups.activeGroupBooks" :key="entry.id">
               <template #content>
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
-                  <button
-                    class="flex gap-4 text-left group"
-                    type="button"
+                  <div
+                    class="flex gap-4 text-left group cursor-pointer"
                     @click="openBookDetail(entry.book)"
                   >
                     <div class="h-20 w-14 flex-shrink-0 overflow-hidden rounded bg-surface-100 dark:bg-surface-800">
@@ -464,7 +536,7 @@ function initials(username: string) {
                       <p v-if="entry.note" class="mt-2 text-sm text-color leading-relaxed">{{ entry.note }}</p>
                       <p v-else class="mt-2 text-sm italic text-surface-400">No note added.</p>
                     </div>
-                  </button>
+                  </div>
 
                   <div class="flex gap-2 sm:ml-auto sm:flex-col sm:flex-shrink-0">
                     <Button
@@ -591,7 +663,11 @@ function initials(username: string) {
         <p class="text-sm text-surface-400 mt-0.5">Join one to unlock its shared shelf.</p>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-2">
+      <div v-if="groups.isLoading" class="grid gap-4 md:grid-cols-2">
+        <div v-for="n in 4" :key="n" class="h-40 rounded-xl bg-surface-100 animate-pulse dark:bg-surface-800" />
+      </div>
+
+      <div v-else-if="groups.groups.length" class="grid gap-4 md:grid-cols-2">
         <Card
           v-for="group in groups.groups"
           :key="group.id"
@@ -619,9 +695,9 @@ function initials(username: string) {
             <div class="flex gap-2">
               <Button
                 v-if="group.isJoined"
-                label="Open shelf"
-                icon="pi pi-arrow-right"
-                @click="groups.selectGroup(group.id)"
+                label="View group"
+                icon="pi pi-eye"
+                @click="selectGroup(group.id)"
               />
               <Button
                 v-else
@@ -636,7 +712,7 @@ function initials(username: string) {
       </div>
 
       <!-- empty state if no groups at all -->
-      <Card v-if="!groups.groups.length" class="border border-dashed border-surface-300 dark:border-surface-700">
+      <Card v-else class="border border-dashed border-surface-300 dark:border-surface-700">
         <template #content>
           <div class="flex flex-col items-center gap-3 py-8 text-center">
             <i class="pi pi-users text-4xl text-surface-300" />
@@ -712,9 +788,10 @@ function initials(username: string) {
         <p class="text-xs text-surface-400">Only you (or the admin) can remove this recommendation after saving.</p>
       </div>
       <div class="flex justify-end gap-2">
-        <Button label="Cancel" severity="secondary" text @click="closeBookDialog" />
+        <Button label="Cancel" severity="secondary" text @click="bookDialogVisible = false" />
         <Button
           :label="editingEntry ? 'Save changes' : 'Add to shelf'"
+          :loading="isSavingRecommendation"
           @click="saveRecommendation"
         />
       </div>

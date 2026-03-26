@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import type { User } from '../types/express.d.ts';
-import knex from '../db/database.ts';
+import type { User } from '../types/express.js';
+import knex from '../db/database.js';
 import bcrypt from 'bcryptjs';
 
 export const login = async (req: Request, res: Response) => {
@@ -24,9 +24,24 @@ export const register = async (req: Request, res: Response) => {
     try {
         const hashed = await bcrypt.hash(password, 10);
         const [id] = await knex('users').insert({ username, first_name, last_name, email, password: hashed, phone_number });
-        const role = await knex('roles').whereLike('name', '%general%').first();
-        const permission = await knex('permissions').whereLike('name', '%manage shelf%').first();
-        await knex('user_role_permissions').insert({ user_id: id, role_id: role.id, permission_id: permission.id })
+
+        const role = await knex('roles').where('name', 'Member').first();
+        const permission = await knex('permissions').where('name', 'Manage shelf').first();
+
+        if (!role) {
+            return res.status(500).json({ error: 'Default role not found.' });
+        }
+
+        if (!permission) {
+            return res.status(500).json({ error: 'Default permission not found.' });
+        }
+
+        await knex('user_role_permissions').insert({
+            user_id: id,
+            role_id: role.id,
+            permission_id: permission.id
+        });
+
         const user = await knex('users').where({ id }).first();
         const { password: _, ...safeUser } = user;
         res.status(201).json({ user: safeUser });

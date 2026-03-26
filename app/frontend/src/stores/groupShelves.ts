@@ -18,6 +18,7 @@ export const useGroupShelvesStore = defineStore('groupShelves', () => {
   const activeGroupId = ref<string | null>(null)
   const activeGroupBooks = ref<GroupBookEntry[]>([])
   const activeGroupMembers = ref<GroupMember[]>([])
+  const isLoading = ref(false)
   const error = ref<string | null>(null)
 
   const currentUserId = computed(() => auth.user?.id ?? null)
@@ -32,27 +33,20 @@ export const useGroupShelvesStore = defineStore('groupShelves', () => {
   }
 
   async function loadGroups() {
-    const fetched = await groupShelvesApi.listGroups(currentUserId.value)
-    // Enrich each group with membership info from the members list
-    const enriched = await Promise.all(
-      fetched.map(async (group) => {
-        const members = await groupShelvesApi.listGroupMembers(group.id)
-        const books = await groupShelvesApi.listGroupBooks(group.id)
-        const myMembership = members.find((m) => m.id === currentUserId.value) ?? null
-        return {
-          ...group,
-          isJoined: !!myMembership,
-          currentUserRole: myMembership?.role ?? null,
-          memberCount: members.length,
-          bookCount: books.length,
-        } as GroupSummary
-      })
-    )
-    groups.value = enriched
-    if (!enriched.length) { activeGroupId.value = null; activeGroupBooks.value = []; return }
-    const hasActive = activeGroupId.value && enriched.some((g) => g.id === activeGroupId.value)
-    if (!hasActive) {
-      activeGroupId.value = enriched.find((g) => g.isJoined)?.id ?? enriched[0]?.id ?? null
+    isLoading.value = true
+    try {
+      const fetched = await groupShelvesApi.listGroups(currentUserId.value)
+      groups.value = fetched
+
+      if (!fetched.length) {
+        activeGroupId.value = null
+        activeGroupBooks.value = []
+        return
+      }
+    } catch (err) {
+      error.value = 'Failed to load groups'
+    } finally {
+      isLoading.value = false
     }
   }
 
@@ -67,42 +61,76 @@ export const useGroupShelvesStore = defineStore('groupShelves', () => {
   }
 
   async function refresh() {
-    await loadGroups()
-    await loadActiveGroupBooks()
-    await loadActiveGroupMembers()
+    clearError()
+    isLoading.value = true
+    try {
+      await loadGroups()
+      if (activeGroupId.value) {
+        await Promise.all([
+          loadActiveGroupBooks(),
+          loadActiveGroupMembers()
+        ])
+      }
+    } catch (err) {
+      setError(err)
+    } finally {
+      isLoading.value = false
+    }
   }
 
   async function selectGroup(groupId: string) {
+    if (activeGroupId.value === groupId && activeGroupBooks.value.length && activeGroupMembers.value.length) {
+      return
+    }
     clearError()
     activeGroupId.value = groupId
-    await loadActiveGroupBooks()
-    await loadActiveGroupMembers()
+    isLoading.value = true
+    try {
+      await Promise.all([
+        loadActiveGroupBooks(),
+        loadActiveGroupMembers()
+      ])
+    } catch (err) {
+      setError(err)
+    } finally {
+      isLoading.value = false
+    }
   }
 
-  async function createGroup(name: string, description: string) {
-    if (!currentUserId.value) throw new Error('Sign in to create a group.')
-    clearError()
-    try {
-      const result = await groupShelvesApi.createGroup(name, description, currentUserId.value)
-      await loadGroups()
-      activeGroupId.value = result.id
-      await loadActiveGroupBooks()
-      await loadActiveGroupMembers()
-      return result
-    } catch (err) { setError(err); throw err }
+  function setActiveGroupId(groupId: string | null) {
+    activeGroupId.value = groupId
   }
 
-  async function joinGroup(groupId: string) {
-    if (!currentUserId.value) throw new Error('Sign in to join a group.')
-    clearError()
-    try {
-      await groupShelvesApi.joinGroup(groupId, currentUserId.value)
-      await loadGroups()
-      activeGroupId.value = groupId
-      await loadActiveGroupBooks()
-      await loadActiveGroupMembers()
-    } catch (err) { setError(err); throw err }
-  }
+    async function createGroup(name: string, description: string) {
+        if (!currentUserId.value) throw new Error('Sign in to create a group.')
+        clearError()
+        try {
+            const result = await groupShelvesApi.createGroup(name, description)
+            await loadGroups()
+            activeGroupId.value = result.id
+            await loadActiveGroupBooks()
+            await loadActiveGroupMembers()
+            return result
+        } catch (err) {
+            setError(err)
+            throw err
+        }
+    }
+
+    async function joinGroup(groupId: string) {
+        if (!currentUserId.value) throw new Error('Sign in to join a group.')
+        clearError()
+        try {
+            await groupShelvesApi.joinGroup(groupId)
+            await loadGroups()
+            activeGroupId.value = groupId
+            await loadActiveGroupBooks()
+            await loadActiveGroupMembers()
+        } catch (err) {
+            setError(err)
+            throw err
+        }
+    }
 
   async function addMember(username: string) {
     if (!activeGroupId.value) throw new Error('No active group.')
@@ -139,7 +167,7 @@ export const useGroupShelvesStore = defineStore('groupShelves', () => {
     if (!activeGroupId.value) { const e = new Error('Choose a group first.'); setError(e); throw e }
     clearError()
     try {
-      await groupShelvesApi.addGroupBook(activeGroupId.value, book.id)
+      await groupShelvesApi.addGroupBook(activeGroupId.value, book.id, note)
       await loadGroups()
       await loadActiveGroupBooks()
     } catch (err) { setError(err); throw err }
@@ -155,14 +183,24 @@ export const useGroupShelvesStore = defineStore('groupShelves', () => {
     } catch (err) { setError(err); throw err }
   }
 
+  async function updateActiveGroupBook(groupBookId: string, note: string) {
+    if (!activeGroupId.value) { const e = new Error('Choose a group first.'); setError(e); throw e }
+    clearError()
+    try {
+      await groupShelvesApi.updateGroupBook(activeGroupId.value, groupBookId, note)
+      await loadGroups()
+      await loadActiveGroupBooks()
+    } catch (err) { setError(err); throw err }
+  }
+
   watch(currentUserId, () => { refresh() }, { immediate: true })
 
   return {
     groups, activeGroupId, activeGroup, activeGroupBooks, activeGroupMembers,
-    joinedGroups, error, isActiveGroupAdmin, currentUsername,
-    refresh, selectGroup, createGroup, joinGroup, addMember,
+    joinedGroups, error, isLoading, isActiveGroupAdmin, currentUsername,
+    refresh, selectGroup, setActiveGroupId, createGroup, joinGroup, addMember,
     removeMember, promoteToAdmin,
-    addBookToActiveGroup, removeActiveGroupBook,
+    addBookToActiveGroup, removeActiveGroupBook, updateActiveGroupBook,
     clearError,
   }
 })

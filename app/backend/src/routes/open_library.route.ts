@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { searchBooks, getWork, getAuthor, getSubject, getCover } from '../controllers/open_library.controller.ts';
+import { searchBooks, getWork, getAuthor, getSubject, getCover } from '../controllers/open_library.controller.js';
 
 const router = Router();
 

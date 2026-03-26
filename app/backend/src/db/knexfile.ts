@@ -6,16 +6,16 @@ const config: { [key: string]: Knex.Config } = {
   development: {
     client: "sqlite3",
     connection: {
-      filename: process.env.DB_PATH || '../../data/pagepulse.db'
+      filename: process.env.DB_PATH || './data/pagepulse.db'
     },
     useNullAsDefault: true,
     migrations: {
       directory: './migrations',
-      extension: 'ts'
+      extension: 'js'
     },
     seeds: {
       directory: './seeds',
-      extension: 'ts'
+      extension: 'js'
     }
   },
 

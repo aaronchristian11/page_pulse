@@ -1,20 +1,30 @@
 <script setup lang="ts">
-    import {ref, onMounted} from 'vue';
-    import { useBooksStore } from '@/stores/books';
-    import BookDetail from '@/components/BookDetail.vue';
-    import Button from 'primevue/button';
-    import Card from 'primevue/card';
-    import type { Book } from '@/stores/books';
+import { onMounted, watch } from 'vue';
+import { useBooksStore } from '@/stores/books';
+import { useAuthStore } from '@/stores/auth';
+import BookDetail from '@/components/BookDetail.vue';
+import Button from 'primevue/button';
+import Card from 'primevue/card';
+import type { Book } from '@/stores/books';
 
-    const store = useBooksStore()
+const store = useBooksStore()
+const auth = useAuthStore()
 
-    function openDetail(book: Book) {
-      store.selectBook(book)
-    }
+function openDetail(book: Book) {
+  store.selectBook(book)
+}
 
-    onMounted(() => {
-        store.fetchShelf();
-    });
+function refresh() {
+  if (auth.user) {
+    store.fetchShelf()
+  }
+}
+
+watch(() => auth.user?.id, (newId) => {
+  if (newId) refresh()
+}, { immediate: true })
+
+onMounted(refresh)
 </script>
 
 <template>

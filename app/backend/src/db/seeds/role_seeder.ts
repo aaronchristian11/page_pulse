@@ -6,7 +6,7 @@ export async function seed(knex: Knex): Promise<void> {
 
     // Inserts seed entries
     await knex("roles").insert([
-        { name: "Administrator" },
-        { name: "Member" }
+        { name: "admin" },
+        { name: "member" }
     ]);
 }

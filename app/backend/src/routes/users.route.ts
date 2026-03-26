@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import knex from '../db/database.ts';
+import knex from '../db/database.js';
 
 const router = Router();
 

@@ -17,14 +17,15 @@ const groupShelves = useGroupShelvesStore()
 const joinedGroupCount = computed(() => groupShelves.joinedGroups.length)
 
 const menuItems = [
-  { label: 'Catalogue', icon: 'pi pi-search', command: () => router.push('/') },
-  { label: 'My Shelf', icon: 'pi pi-book', command: () => router.push('/shelf') },
-  { label: 'Group Shelves', icon: 'pi pi-users', command: () => router.push('/groups') },
+  { label: 'Catalogue', icon: 'pi pi-search', to: '/' },
+  { label: 'My Shelf', icon: 'pi pi-book', to: '/shelf' },
+  { label: 'Group Shelves', icon: 'pi pi-users', to: '/groups' },
 ]
 
 function logout() {
   auth.setUser(null)
-  books.shelf = []
+  books.setShelf([])
+  groupShelves.refresh()
   router.push('/')
 }
 </script>
@@ -33,6 +34,16 @@ function logout() {
     <Toast position="top-center"/>
 
     <Menubar :model="menuItems" class="border-0 border-b rounded-none px-4">
+        <template #item="{ item, props }">
+            <RouterLink v-if="item.to" :to="item.to" v-bind="props.action" class="flex items-center gap-2 px-3 py-2">
+                <span :class="item.icon" />
+                <span>{{ item.label }}</span>
+            </RouterLink>
+            <a v-else :href="item.url" :target="item.target" v-bind="props.action" class="flex items-center gap-2 px-3 py-2">
+                <span :class="item.icon" />
+                <span>{{ item.label }}</span>
+            </a>
+        </template>
         <template #start>
             <RouterLink to="/"
                         class="flex items-center gap-2 mr-4 font-bold text-primary text-lg no-underline">
