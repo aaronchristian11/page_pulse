@@ -1,4 +1,5 @@
 <script setup lang="ts">
+    import StarRating from '@/components/StarRating.vue'
     import {ref, onMounted} from 'vue';
     import { useBooksStore } from '@/stores/books';
     import BookDetail from '@/components/BookDetail.vue';
@@ -10,6 +11,10 @@
 
     function openDetail(book: Book) {
       store.selectBook(book)
+    }
+
+    async function handleRating(bookId: string, rating: number) {
+      await store.rateBook(bookId, rating)
     }
 
     onMounted(() => {
@@ -68,6 +73,13 @@
               <p v-if="book.author" class="text-sm text-primary truncate">{{ book.author }}</p>
               <p v-if="book.isbn" class="text-xs text-surface-400 mt-1">ISBN: {{ book.isbn }}</p>
             </div>
+
+            <!-- Rating -->
+            <StarRating
+                :modelValue="book.rating ?? null"
+                @update:modelValue="handleRating(book.id, $event)"
+                class="mx-3"
+            />
 
             <!-- Remove -->
             <Button

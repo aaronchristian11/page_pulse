@@ -68,15 +68,24 @@ function logout() {
 
         <!-- Logged in -->
         <template v-if="auth.user">
-          <span class="text-sm text-surface-400">{{ auth.user.username }}</span>
-          <Button
-            icon="pi pi-sign-out"
-            severity="secondary"
-            text
-            rounded
-            aria-label="Sign out"
-            @click="logout"
-          />
+            <span class="text-sm text-surface-400">{{ auth.user.username }}</span>
+            <RouterLink to="/profile">
+                <Button
+                    icon="pi pi-user"
+                    severity="secondary"
+                    text
+                    rounded
+                    aria-label="My Profile"
+                />
+            </RouterLink>
+            <Button
+                icon="pi pi-sign-out"
+                severity="secondary"
+                text
+                rounded
+                aria-label="Sign out"
+                @click="logout"
+            />
         </template>
 
                 <!-- Not logged in -->

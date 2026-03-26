@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import knex from '../db/database.ts';
-import {User} from "../types/express";
+import type { User } from '../types/express.js';
 
 export const getGroups = async (req: Request, res: Response) => {
     try {
@@ -36,22 +36,22 @@ export const getGroup = async (req: Request, res: Response) => {
     }
 };
 
-export const createGroup = async (req: Request, res: Response) => {
-    const { name, description } = req.body;
-    const user = req.user as User;
+    export const createGroup = async (req: Request, res: Response) => {
+        const { name, description } = req.body;
+        const user = req.user as User;
 
-    try {
-        const [id] = await knex('groups').insert({ name, description });
+        try {
+            const [id] = await knex('groups').insert({ name, description });
 
-        // User creating the group is admin of the group
-        const role_permission = rolePermission('administrator');
-        await knex('user_groups').insert({ group_id: id, user.id, role_permission_id: role_permission.id });
+            // User creating the group is admin of the group
+            const role_permission = rolePermission('administrator');
+            await knex('user_groups').insert({ group_id: id, user_id: user.id, role_permission_id: role_permission.id });
 
-        res.status(201).json({ message: 'Group created.', id });
-    } catch (err: any) {
-        res.status(500).json({ error: 'Failed to create group.' });
-    }
-};
+            res.status(201).json({ message: 'Group created.', id });
+        } catch (err: any) {
+            res.status(500).json({ error: 'Failed to create group.' });
+        }
+    };
 
 export const updateGroup = async (req: Request, res: Response) => {
     const { id } = req.params;

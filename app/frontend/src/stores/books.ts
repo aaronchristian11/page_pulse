@@ -15,6 +15,7 @@ export interface Book {
     cover_i: number | null
     first_publish_year: number | null
     subject: string[]
+    rating?: number | null
 }
 
 function toBook(doc: BookSearchResult): Book {
@@ -149,10 +150,29 @@ export const useBooksStore = defineStore('books', () => {
         return coverId ? openLibraryApi.covers.byId(coverId, size) : openLibraryApi.covers.placeholder()
     }
 
+    async function rateBook(bookId: string, rating: number) {
+        if (!user.value) return;
+            const book = shelf.value?.find(b => b.id === bookId);
+        if (!book) return;
+
+        await axios.patch(`/api/shelves/${user.value.id}/book/rating`, {
+            book_key: bookId,
+            rating,
+        }).then(() => {
+            if (shelf.value) {
+                const target = shelf.value.find(b => b.id === bookId);
+                if (target) target.rating = rating;
+            }
+        }).catch(err => {
+            error.value = err.response?.data?.error || 'Failed to save rating.';
+        });
+    }
+
     return {
         books, searchQuery, isLoading, error, totalResults, currentPage, pageSize,
         shelf, selectedBook, selectedWorkDetail, isLoadingDetail,
         searchBooks, selectBook, clearSelectedBook,
-        addToShelf, removeFromShelf, isOnShelf, coverUrl, fetchShelf, setShelf
+        addToShelf, removeFromShelf, isOnShelf, coverUrl, fetchShelf, setShelf,
+        rateBook
     }
 })
