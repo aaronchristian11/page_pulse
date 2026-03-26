@@ -10,7 +10,7 @@ const router = Router();
 
 router.use('/auth', authRoutes);
 router.use('/shelves', isAuthenticated, hasPermission('manage shelf'), shelfRoutes);
-router.use('/groups', groupRoutes);
+router.use('/groups', isAuthenticated, hasPermission('manage groups'), groupRoutes);
 router.use('/books', openLibraryRoutes);
 router.use('/users', usersRouter);
 

@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import knex from '../db/database.ts';
-import {User} from "../types/express";
+import type { User } from "../types/express.d.ts";
 
 export const getGroups = async (req: Request, res: Response) => {
     try {
@@ -44,8 +44,13 @@ export const createGroup = async (req: Request, res: Response) => {
         const [id] = await knex('groups').insert({ name, description });
 
         // User creating the group is admin of the group
-        const role_permission = rolePermission('administrator');
-        await knex('user_groups').insert({ group_id: id, user.id, role_permission_id: role_permission.id });
+        const role_permission = await rolePermission('administrator');
+        console.log(role_permission);
+        await knex('user_groups').insert({
+            group_id: id,
+            user_id: user.id,
+            role_permission_id: role_permission.id
+        });
 
         res.status(201).json({ message: 'Group created.', id });
     } catch (err: any) {
@@ -93,7 +98,6 @@ export const deleteGroup = async (req: Request, res: Response) => {
 
 export const joinGroup = async (req: Request, res: Response) => {
     const { groupId } = req.params;
-    const { user_id } = req.body;
     const user = req.user as User;
 
     try {
@@ -109,7 +113,7 @@ export const joinGroup = async (req: Request, res: Response) => {
             return res.status(409).json({ error: 'User is already a member of this group.' });
         }
 
-        const role_permission = rolePermission('member');
+        const role_permission = await rolePermission('member');
 
         // Regular members get manage group permission but can only add books to the group
         await knex('user_groups').insert({ group_id: groupId, user_id: user.id, role_permission_id: role_permission.id });
@@ -120,20 +124,20 @@ export const joinGroup = async (req: Request, res: Response) => {
     }
 };
 
-export const getGroupMembers = async (req: Request, res: Response) => {
-    const { groupId } = req.params;
-
-    try {
-        const members = await knex('user_groups')
-            .join('users', 'user_groups.user_id', 'users.id')
-            .where('user_groups.group_id', groupId)
-            .select('users.id', 'users.username', 'user_groups.role');
-
-        res.json({ members });
-    } catch (err: any) {
-        res.status(500).json({ error: 'Failed to fetch members.' });
-    }
-};
+// export const getGroupMembers = async (req: Request, res: Response) => {
+//     const { groupId } = req.params;
+//
+//     try {
+//         const members = await knex('user_groups')
+//             .join('users', 'user_groups.user_id', 'users.id')
+//             .where('user_groups.group_id', groupId)
+//             .select('users.id', 'users.username', 'user_groups.role');
+//
+//         res.json({ members });
+//     } catch (err: any) {
+//         res.status(500).json({ error: 'Failed to fetch members.' });
+//     }
+// };
 
 export const updateMember = async (req: Request, res: Response) => {
     const { groupId, userId } = req.params;
@@ -224,7 +228,7 @@ export const updateGroupBook = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Book not found in this group.' });
         }
 
-        const is_admin = checkIsGroupAdmin(user.id, group_id);
+        const is_admin = await checkIsGroupAdmin(user.id, group_id);
 
         if (!is_admin && book.user_id !== user.id) {
             return res.status(403).json({ error: 'Forbidden. You can only update books you added.' });
@@ -252,9 +256,9 @@ export const deleteGroupBook = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Book not found in this group.' });
         }
 
-        const is_admin = checkIsGroupAdmin(user.id, group_id);
+        const is_admin = await checkIsGroupAdmin(user.id, group_id);
 
-        if (!is_admin && book.added_by !== user.id) {
+        if (!is_admin && book.user_id !== user.id) {
             return res.status(403).json({ error: 'Forbidden. You can only remove books you added.' });
         }
 
@@ -272,8 +276,8 @@ const rolePermission = async (role: string) => {
     return await knex('role_permissions')
                 .join('roles', 'role_permissions.role_id', 'roles.id')
                 .join('permissions', 'role_permissions.permission_id', 'permissions.id')
-                .where('roles.name', role)
-                .where('permissions.name', 'manage groups')
+                .whereLike('roles.name', role)
+                .whereLike('permissions.name', 'manage groups')
                 .select('role_permissions.id')
                 .first();
 }

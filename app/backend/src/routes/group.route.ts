@@ -1,21 +1,21 @@
 import { Router } from 'express';
-import { getGroups, getGroup, createGroup, updateGroup, deleteGroup, joinGroup, getGroupMembers, updateMember, removeMember, getGroupBooks, addGroupBook, updateGroupBook, deleteGroupBook } from '../controllers/index.ts';
-import {hasGroupPermission, isAuthenticated, isGroupAdmin} from "../middlewares/auth.middleware.ts";
+import { getGroups, getGroup, createGroup, updateGroup, deleteGroup, joinGroup, updateMember, removeMember, getGroupBooks, addGroupBook, updateGroupBook, deleteGroupBook } from '../controllers/index.ts';
+import {isGroupAdmin} from "../middlewares/auth.middleware.ts";
 
 const router = Router();
 
 router.get('/', getGroups);
 router.get('/:id', getGroup);
-router.post('/', isAuthenticated, hasGroupPermission, createGroup);
-router.put('/:id', isAuthenticated, hasGroupPermission, updateGroup);
-router.delete('/:id', isAuthenticated, hasGroupPermission, isGroupAdmin, deleteGroup);
-router.post('/:groupId/join', isAuthenticated, joinGroup);
-router.get('/:groupId/members', isAuthenticated, hasGroupPermission, getGroupMembers);
-router.put('/:groupId/members/:userId', isAuthenticated, hasGroupPermission, isGroupAdmin, updateMember);
-router.delete('/:groupId/members/:userId', isAuthenticated, hasGroupPermission, isGroupAdmin, removeMember);
-router.get('/:groupId/books', isAuthenticated, hasGroupPermission, getGroupBooks);
-router.post('/:groupId/books', isAuthenticated, hasGroupPermission, addGroupBook);
-router.put('/:groupId/books/:bookId', isAuthenticated, hasGroupPermission, updateGroupBook);
-router.delete('/:groupId/books/:bookId', isAuthenticated, hasGroupPermission, deleteGroupBook);
+router.post('/create', createGroup);
+router.put('/:id', updateGroup);
+router.delete('/:id', isGroupAdmin, deleteGroup);
+router.post('/:group_id/join', joinGroup);
+// router.get('/:group_id/members', isAuthenticated, hasGroupPermission, getGroupMembers);
+router.put('/:group_id/members/:userId', isGroupAdmin, updateMember);
+router.delete('/:group_id/members/:userId', isGroupAdmin, removeMember);
+router.get('/:group_id/books', getGroupBooks);
+router.post('/:group_id/books', addGroupBook);
+router.put('/:group_id/books/:book_id', updateGroupBook);
+router.delete('/:group_id/books/:book_id', deleteGroupBook);
 
 export default router;

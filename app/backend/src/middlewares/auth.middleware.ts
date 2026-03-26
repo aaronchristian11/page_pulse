@@ -28,34 +28,14 @@ export const hasPermission = (permission: string) => {
         }
 
         const userPermission = await knex('user_role_permissions')
-            .join('roles', 'user_role_permissions.role_id', 'roles.id')
-            .join('permissions', 'user_role_permissions.permission_id', 'permissions.id')
+            .join('role_permissions', 'user_role_permissions.role_permission_id', 'role_permissions.id')
+            .join('roles', 'role_permissions.role_id', 'roles.id')
+            .join('permissions', 'role_permissions.permission_id', 'permissions.id')
             .where('user_role_permissions.user_id', user.id)
             .whereLike('permissions.name', `%${permission}%`)
             .first();
 
         if (!userPermission) {
-            return res.status(403).json({ error: 'Forbidden.' });
-        }
-
-        next();
-    };
-};
-
-export const hasGroupPermission = (permission: string) => {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const user = req.user as User;
-        const group_id = req.params.group_id || req.params.id;
-
-        const user_group_permission = await knex('user_groups')
-            .join('role_permissions', 'user_groups.role_permission_id', 'role_permissions.id')
-            .join('permissions', 'role_permissions.permission_id', 'permissions.id')
-            .where('user_groups.user_id', user.id)
-            .where('user_groups.group_id', group_id)
-            .where('permissions.name', permission)
-            .first();
-
-        if (!user_group_permission) {
             return res.status(403).json({ error: 'Forbidden.' });
         }
 
