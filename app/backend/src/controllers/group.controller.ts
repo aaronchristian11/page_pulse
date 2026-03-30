@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import knex from '../db/database.ts';
-import {User} from "../types/express";
+import type { User } from '../types/express.d.ts';
 
 export const getGroups = async (req: Request, res: Response) => {
     try {
@@ -45,7 +45,7 @@ export const createGroup = async (req: Request, res: Response) => {
 
         // User creating the group is admin of the group
         const role_permission = rolePermission('administrator');
-        await knex('user_groups').insert({ group_id: id, user.id, role_permission_id: role_permission.id });
+        await knex('user_groups').insert({ group_id: id, user_id: user.id, role_permission_id: role_permission.id });
 
         res.status(201).json({ message: 'Group created.', id });
     } catch (err: any) {

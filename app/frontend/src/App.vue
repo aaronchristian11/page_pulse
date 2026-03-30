@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useBooksStore } from '@/stores/books'
 import { useGroupShelvesStore } from '@/stores/groupShelves'
@@ -10,9 +10,12 @@ import Badge from 'primevue/badge'
 import Toast from 'primevue/toast'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 const books = useBooksStore()
 const groupShelves = useGroupShelvesStore()
+
+const isLanding = computed(() => route.name === 'landing')
 
 const joinedGroupCount = computed(() => groupShelves.joinedGroups.length)
 
@@ -30,41 +33,21 @@ function logout() {
 </script>
 
 <template>
-    <Toast position="top-center"/>
+  <Toast position="top-center" />
 
-    <Menubar :model="menuItems" class="border-0 border-b rounded-none px-4">
-        <template #start>
-            <RouterLink to="/"
-                        class="flex items-center gap-2 mr-4 font-bold text-primary text-lg no-underline">
-                <i class="pi pi-heart-fill"/>
-                PagePulse
-            </RouterLink>
-        </template>
-        <template #end>
-            <div class="flex items-center gap-3">
+  <Menubar v-if="!isLanding" :model="menuItems" class="border-0 border-b rounded-none px-4">
+    <template #start>
+      <RouterLink
+        to="/"
+        class="flex items-center gap-2 mr-4 font-bold text-primary text-lg no-underline"
+      >
+        <i class="pi pi-heart-fill" />
+        PagePulse
+      </RouterLink>
+    </template>
 
-                <!-- Shelf badge -->
-                <RouterLink to="/shelf" class="relative inline-flex">
-                    <Button icon="pi pi-book" severity="secondary" text rounded
-                            aria-label="My Shelf"/>
-                    <Badge
-                        v-if="books.shelf && books.shelf.length"
-                        :value="books.shelf.length"
-                        class="absolute -top-1 -right-1"
-                        size="small"
-                    />
-                </RouterLink>
-
-        <RouterLink to="/groups" class="relative inline-flex">
-          <Button icon="pi pi-users" severity="secondary" text rounded aria-label="Group Shelves" />
-          <Badge
-            v-if="joinedGroupCount"
-            :value="joinedGroupCount"
-            class="absolute -top-1 -right-1"
-            severity="contrast"
-            size="small"
-          />
-        </RouterLink>
+    <template #end>
+      <div class="flex items-center gap-3">
 
         <!-- Logged in -->
         <template v-if="auth.user">
@@ -79,19 +62,19 @@ function logout() {
           />
         </template>
 
-                <!-- Not logged in -->
-                <template v-else>
-                    <Button
-                        label="Sign In"
-                        icon="pi pi-user"
-                        size="small"
-                        @click="router.push('/login')"
-                    />
-                </template>
-
-            </div>
+        <!-- Not logged in -->
+        <template v-else>
+          <Button
+            label="Sign In"
+            icon="pi pi-user"
+            size="small"
+            @click="router.push('/login')"
+          />
         </template>
-    </Menubar>
 
-    <RouterView/>
+      </div>
+    </template>
+  </Menubar>
+
+  <RouterView />
 </template>

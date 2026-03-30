@@ -16,7 +16,7 @@ services:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
     restart: unless-stopped
-    command: sh -c "npx tsx watch --clear-screen=false src/index.ts"
+    command: sh -c "npx tsx ./node_modules/.bin/knex --knexfile src/db/knexfile.ts migrate:latest && npx tsx ./node_modules/.bin/knex --knexfile src/db/knexfile.ts seed:run && npx tsx watch --clear-screen=false src/index.ts"
 
   frontend:
     container_name: vue_dev
