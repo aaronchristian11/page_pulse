@@ -45,7 +45,6 @@ export const createGroup = async (req: Request, res: Response) => {
 
         // User creating the group is admin of the group
         const role_permission = await rolePermission('administrator');
-        console.log(role_permission);
         await knex('user_groups').insert({
             group_id: id,
             user_id: user.id,
