@@ -87,6 +87,16 @@ docker compose -f compose.dev.yaml logs -f
 docker exec -it <container_name> sh
 ```
 
+### Run migrations and seeders
+```shell
+npx knex migrate:latest --knexfile src/db/knexfile.ts
+npx knex seed:run --knexfile src/db/knexfile.ts
+```
+#### Run migration rollback
+```shell
+npx knex migrate:rollback --knexfile src/db/knexfile.ts
+```
+
 ## Features
 
 ### General User

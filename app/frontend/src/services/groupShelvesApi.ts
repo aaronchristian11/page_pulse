@@ -10,26 +10,26 @@ export interface GroupSummary {
     isJoined: boolean;
     memberCount: number;
     bookCount: number;
-    currentUserRole: 'admin' | 'member' | null;
+    currentUserRole: 'Administrator' | 'General' | null;
+    members: GroupMember[];
+    books: GroupBookEntry[];
 }
 
 export interface GroupMember {
     id: number;
     username: string;
-    role: 'admin' | 'member';
+    role: 'Administrator' | 'General';
 }
 
 export interface GroupBookEntry {
     id: string;
-    groupId: string;
-    book: Book;
+    key: string;
     addedBy: string;
-    addedAt: string;
-    note: string;
+    addedByUserId: number;
 }
 
 export const groupShelvesApi = {
-    async listGroups(userId?: number | null): Promise<GroupSummary[]> {
+    async listGroups(currentUserId?: number | null): Promise<GroupSummary[]> {
         try {
             const { data } = await axios.get(`${BASE}/groups`);
             const groups = data.groups ?? [];
@@ -38,53 +38,37 @@ export const groupShelvesApi = {
                 id: String(g.id),
                 name: g.name,
                 description: g.description ?? '',
-                isJoined: false,
-                memberCount: 0,
-                bookCount: 0,
-                currentUserRole: null,
+                members: (g.members ?? []).map((m: any) => ({
+                    id: m.id,
+                    username: m.username,
+                    role: m.role,
+                })),
+                books: (g.books ?? []).map((b: any) => ({
+                    id: String(b.id),
+                    key: b.key,
+                    addedBy: `${b.first_name} ${b.last_name}`,
+                    addedByUserId: b.user_id,
+                })),
+                isJoined: (g.members ?? []).some((m: any) => m.id === currentUserId),
+                currentUserRole: (g.members ?? []).find((m: any) => m.id === currentUserId)?.role ?? null,
+                memberCount: g.members?.length ?? 0,
+                bookCount: g.books?.length ?? 0,
             }));
         } catch (error: any) {
             throw new Error(error?.response?.data?.error ?? 'Failed to fetch groups.');
         }
     },
 
-    async listGroupMembers(groupId: string): Promise<GroupMember[]> {
+    async createGroup(name: string, description: string): Promise<{ id: string }> {
         try {
-            const { data } = await axios.get(`${BASE}/groups/${groupId}/members`);
-
-            return (data.members ?? []).map((m: any) => ({
-                id: m.id,
-                username: m.username,
-                role: m.role,
-            }));
-        } catch (error: any) {
-            throw new Error(error?.response?.data?.error ?? 'Failed to fetch members.');
-        }
-    },
-
-    async listGroupBooks(groupId: string): Promise<GroupBookEntry[]> {
-        try {
-            const { data } = await axios.get(`${BASE}/groups/${groupId}/books`);
-            return data.books ?? [];
-        } catch (error: any) {
-            throw new Error(error?.response?.data?.error ?? 'Failed to fetch books.');
-        }
-    },
-
-    async createGroup(name: string, description: string, userId: number): Promise<{ id: string }> {
-        try {
-            const { data } = await axios.post(`${BASE}/groups/create`, {
-                name,
-                description,
-            });
-
+            const { data } = await axios.post(`${BASE}/groups/create`, { name, description });
             return { id: String(data.id) };
         } catch (error: any) {
             throw new Error(error?.response?.data?.error ?? 'Failed to create group.');
         }
     },
 
-    async joinGroup(groupId: string, userId: number): Promise<void> {
+    async joinGroup(groupId: string): Promise<void> {
         try {
             await axios.post(`${BASE}/groups/${groupId}/join`);
         } catch (error: any) {
@@ -92,55 +76,72 @@ export const groupShelvesApi = {
         }
     },
 
-    async addMemberByUsername(groupId: string, username: string): Promise<void> {
+    async addMemberByUsername(groupId: string, username: string): Promise<GroupMember[]> {
         try {
-            // Lookup user
-            const { data: lookupData } = await axios.get(
-                `${BASE}/users/lookup`,
-                { params: { username } }
-            );
-
+            const { data: lookupData } = await axios.get(`${BASE}/users/lookup`, { params: { username } });
             const userId = lookupData.user.id;
-
-            await axios.post(`${BASE}/groups/${groupId}/join`, {
-                user_id: userId,
-            });
+            const { data } = await axios.post(`${BASE}/groups/${groupId}/join`, { user_id: userId });
+            return (data.members ?? []).map((m: any) => ({
+                id: m.id,
+                username: m.username,
+                role: m.role,
+            }));
         } catch (error: any) {
             throw new Error(error?.response?.data?.error ?? 'Failed to add member.');
         }
     },
 
-    async removeMember(groupId: string, userId: number): Promise<void> {
+    async removeMember(groupId: string, userId: number): Promise<GroupMember[]> {
         try {
-            await axios.delete(`${BASE}/groups/${groupId}/members/${userId}`);
+            const { data } = await axios.delete(`${BASE}/groups/${groupId}/members/${userId}`);
+            return (data.members ?? []).map((m: any) => ({
+                id: m.id,
+                username: m.username,
+                role: m.role,
+            }));
         } catch (error: any) {
             throw new Error(error?.response?.data?.error ?? 'Failed to remove member.');
         }
     },
 
-    async promoteToAdmin(groupId: string, userId: number): Promise<void> {
+    async promoteToAdmin(groupId: string, userId: number): Promise<GroupMember[]> {
         try {
-            await axios.put(`${BASE}/groups/${groupId}/members/${userId}`, {
-                role: 'admin',
+            const { data } = await axios.put(`${BASE}/groups/${groupId}/members/${userId}`, {
+                role_permission_id: 1, // Administrator - Manage groups
             });
+            return (data.members ?? []).map((m: any) => ({
+                id: m.id,
+                username: m.username,
+                role: m.role,
+            }));
         } catch (error: any) {
             throw new Error(error?.response?.data?.error ?? 'Failed to promote member.');
         }
     },
 
-    async addGroupBook(groupId: string, bookId: string): Promise<void> {
+    async addGroupBook(groupId: string, bookId: string): Promise<GroupBookEntry[]> {
         try {
-            await axios.post(`${BASE}/groups/${groupId}/books`, {
-                book_id: bookId,
-            });
+            const { data } = await axios.post(`${BASE}/groups/${groupId}/books`, { book_id: bookId });
+            return (data.books ?? []).map((b: any) => ({
+                id: String(b.id),
+                key: b.key,
+                addedBy: `${b.first_name} ${b.last_name}`,
+                addedByUserId: b.user_id,
+            }));
         } catch (error: any) {
             throw new Error(error?.response?.data?.error ?? 'Failed to add book.');
         }
     },
 
-    async removeGroupBook(groupId: string, bookId: string): Promise<void> {
+    async removeGroupBook(groupId: string, bookId: string): Promise<GroupBookEntry[]> {
         try {
-            await axios.delete(`${BASE}/groups/${groupId}/books/${bookId}`);
+            const { data } = await axios.delete(`${BASE}/groups/${groupId}/books/${bookId}`);
+            return (data.books ?? []).map((b: any) => ({
+                id: String(b.id),
+                key: b.key,
+                addedBy: `${b.first_name} ${b.last_name}`,
+                addedByUserId: b.user_id,
+            }));
         } catch (error: any) {
             throw new Error(error?.response?.data?.error ?? 'Failed to remove book.');
         }

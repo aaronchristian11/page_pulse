@@ -24,7 +24,8 @@ const menuItems = [
 
 function logout() {
   auth.setUser(null)
-  books.shelf = []
+  books.shelf = [];
+  groupShelves.groups = []
   router.push('/')
 }
 </script>

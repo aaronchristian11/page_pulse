@@ -28,12 +28,12 @@ export const hasPermission = (permission: string) => {
         }
 
         const userPermission = await knex('user_role_permissions')
-            .join('role_permissions', 'user_role_permissions.role_permission_id', 'role_permissions.id')
-            .join('roles', 'role_permissions.role_id', 'roles.id')
-            .join('permissions', 'role_permissions.permission_id', 'permissions.id')
-            .where('user_role_permissions.user_id', user.id)
-            .whereLike('permissions.name', `%${permission}%`)
-            .first();
+                                    .join('role_permissions', 'user_role_permissions.role_permission_id', 'role_permissions.id')
+                                    .join('roles', 'role_permissions.role_id', 'roles.id')
+                                    .join('permissions', 'role_permissions.permission_id', 'permissions.id')
+                                    .where('user_role_permissions.user_id', user.id)
+                                    .whereLike('permissions.name', `%${permission}%`)
+                                    .first();
 
         if (!userPermission) {
             return res.status(403).json({ error: 'Forbidden.' });
