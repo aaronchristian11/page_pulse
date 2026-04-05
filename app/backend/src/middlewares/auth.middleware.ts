@@ -45,21 +45,29 @@ export const hasPermission = (permission: string) => {
 
 export const isGroupAdmin = async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as User;
-    const group_id = req.params.groupId || req.params.id;
+    const { group_id } = req.params;
 
-    const admin_check = await knex('user_groups')
-        .join('role_permissions', 'user_groups.role_permission_id', 'role_permissions.id')
-        .join('roles', 'role_permissions.role_id', 'roles.id')
-        .where('user_groups.user_id', user.id)
-        .where('user_groups.group_id', group_id)
-        .where('roles.name', 'administrator')
-        .first();
-
-    if (!admin_check) {
-        return res.status(403).json({ error: 'Forbidden. You must be a group admin.' });
+    if (!group_id || !user?.id) {
+        return res.status(400).json({ error: 'Missing required parameters.' });
     }
 
-    next();
+    try {
+        const admin_check = await knex('user_groups')
+            .join('role_permissions', 'user_groups.role_permission_id', 'role_permissions.id')
+            .join('roles', 'role_permissions.role_id', 'roles.id')
+            .where('user_groups.user_id', user.id)
+            .where('user_groups.group_id', group_id)
+            .whereLike('roles.name', 'administrator')
+            .first();
+
+        if (!admin_check) {
+            return res.status(403).json({ error: 'Forbidden. You must be a group admin.' });
+        }
+
+        next();
+    } catch (err) {
+        return res.status(500).json({ error: 'Authorization check failed.' });
+    }
 };
 
 /*

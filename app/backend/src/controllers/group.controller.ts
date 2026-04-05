@@ -113,7 +113,8 @@ export const deleteGroup = async (req: Request, res: Response) => {
 
 export const joinGroup = async (req: Request, res: Response) => {
     const { group_id } = req.params;
-    const user = req.user as User;
+    const newUser = req.body.user;
+    const user = (newUser ?? req.user) as User;
 
     try {
         const group = await knex('groups').where({ id: group_id }).whereNull('deleted_at').first();
@@ -135,8 +136,9 @@ export const joinGroup = async (req: Request, res: Response) => {
             role_permission_id: role_permission.id
         });
         const books = await getGroupBooksQuery(group_id);
+        const members = await getGroupMembersQuery(group_id);
 
-        res.json({ message: 'Joined group.', books });
+        res.json({ message: 'Joined group.', books, members });
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to join group.' });
     }
@@ -174,18 +176,19 @@ export const updateMember = async (req: Request, res: Response) => {
 };
 
 export const removeMember = async (req: Request, res: Response) => {
-    const { group_id, userId } = req.params;
+    const { group_id, user_id } = req.params;
 
     try {
-        const member = await knex('user_groups').where({ group_id, user_id: userId }).first();
+        const member = await knex('user_groups').where({ group_id, user_id }).first();
 
         if (!member) {
             return res.status(404).json({ error: 'Member not found.' });
         }
 
-        await knex('user_groups').where({ group_id, user_id: userId }).delete();
+        await knex('user_groups').where({ group_id, user_id }).delete();
 
         const members = await getGroupMembersQuery(group_id);
+
         res.json({ message: 'Member removed.', members });
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to remove member.' });

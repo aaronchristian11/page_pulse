@@ -68,7 +68,7 @@ export const groupShelvesApi = {
         }
     },
 
-    async joinGroup(groupId: string): Promise<void> {
+    async joinGroup(groupId: number): Promise<void> {
         try {
             await axios.post(`${BASE}/groups/${groupId}/join`);
         } catch (error: any) {
@@ -79,8 +79,8 @@ export const groupShelvesApi = {
     async addMemberByUsername(groupId: string, username: string): Promise<GroupMember[]> {
         try {
             const { data: lookupData } = await axios.get(`${BASE}/users/lookup`, { params: { username } });
-            const userId = lookupData.user.id;
-            const { data } = await axios.post(`${BASE}/groups/${groupId}/join`, { user_id: userId });
+            const user = lookupData.user;
+            const { data } = await axios.post(`${BASE}/groups/${groupId}/join`, { user: user });
             return (data.members ?? []).map((m: any) => ({
                 id: m.id,
                 username: m.username,

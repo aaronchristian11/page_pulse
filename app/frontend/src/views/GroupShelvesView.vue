@@ -218,7 +218,7 @@ async function removeBook(entry: GroupBookEntry) {
 <template>
     <ConfirmDialog />
 
-    <main class="flex flex-col gap-6 p-6 max-w-6xl mx-auto">
+    <main class="flex flex-col gap-6 p-6 max-w-full">
 
         <!-- ── Page Header ─────────────────────────────────────────────────────── -->
         <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
