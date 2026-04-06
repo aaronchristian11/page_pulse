@@ -135,7 +135,15 @@ export const useBooksStore = defineStore('books', () => {
             router.push('login');
         } else {
             await axios.get(`/api/shelves/${user.value.id}/books`)
-                .then(res => shelf.value = res.data.books.map(toBook))
+                .then(res => {
+                    shelf.value = res.data.books.map((b: any) => ({
+                        ...toBook(b),
+                        // Work objects from Open Library return covers[] not cover_i
+                        cover_i: b.cover_i ?? b.covers?.[0] ?? null,
+                        // Preserve the rating returned by the shelf endpoint
+                        rating: b.rating ?? null,
+                    }))
+                })
                 .catch(err => {
                     error.value = err.response?.data?.error || 'Failed to fetch shelf.';
                 });

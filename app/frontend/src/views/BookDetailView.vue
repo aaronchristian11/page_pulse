@@ -2,6 +2,8 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBooksStore } from '@/stores/books'
+import { useAuthStore } from '@/stores/auth'
+import StarRating from '@/components/StarRating.vue'
 import axios from 'axios'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
@@ -11,12 +13,20 @@ import Divider from 'primevue/divider'
 const route = useRoute()
 const router = useRouter()
 const store = useBooksStore()
+const auth = useAuthStore()
 
 const book = ref<any>(null)
 const detail = ref<any>(null)
 const isLoading = ref(true)
 
 const bookId = computed(() => route.params.id as string)
+
+// Current rating for this book pulled from the shelf store
+const currentRating = computed(() => store.shelf?.find(b => b.id === bookId.value)?.rating ?? null)
+
+async function handleRate(rating: number) {
+    await store.rateBook(bookId.value, rating)
+}
 
 onMounted(async () => {
   isLoading.value = true
@@ -38,8 +48,11 @@ onMounted(async () => {
       }
     }
 
-    // Fetch full work detail
-    const workRes = await axios.get(`https://openlibrary.org/works/${bookId.value}.json`)
+    // Fetch full work detail and shelf in parallel
+    const [workRes] = await Promise.all([
+      axios.get(`https://openlibrary.org/works/${bookId.value}.json`),
+      auth.user ? store.fetchShelf() : Promise.resolve(),
+    ])
     detail.value = {
       description: typeof workRes.data.description === 'string'
         ? workRes.data.description
@@ -142,7 +155,7 @@ onMounted(async () => {
         <Divider />
 
         <!-- Actions -->
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-wrap gap-3 items-center">
           <Button
             :icon="store.isOnShelf(book.id) ? 'pi pi-check' : 'pi pi-plus'"
             :label="store.isOnShelf(book.id) ? 'On My Shelf' : 'Add to Shelf'"
@@ -153,6 +166,17 @@ onMounted(async () => {
             <Button label="View on Open Library" icon="pi pi-external-link" severity="secondary" outlined />
           </a>
         </div>
+
+        <!-- Rating (only shown when the book is on the user's shelf) -->
+        <div v-if="auth.user && store.isOnShelf(book.id)" class="flex items-center gap-3">
+          <span class="text-sm text-surface-400 font-medium">Your rating:</span>
+          <StarRating
+            :modelValue="currentRating"
+            @update:modelValue="handleRate"
+          />
+          <span v-if="currentRating" class="text-xs text-surface-400">{{ currentRating }}/5</span>
+        </div>
+
       </div>
     </div>
   </main>
