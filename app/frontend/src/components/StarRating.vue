@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps<{
     modelValue: number | null
     readonly?: boolean
+    size?: 'sm' | 'md' | 'lg'
 }>()
 
 const emit = defineEmits<{
@@ -11,6 +12,12 @@ const emit = defineEmits<{
 }>()
 
 const hovered = ref<number | null>(null)
+
+const iconSize = computed(() => {
+    if (props.size === 'sm') return 'text-sm'
+    if (props.size === 'lg') return 'text-2xl'
+    return 'text-lg'
+})
 
 function select(star: number) {
     if (!props.readonly) emit('update:modelValue', star)
@@ -23,7 +30,8 @@ function select(star: number) {
             v-for="star in 5"
             :key="star"
             :class="[
-                'pi cursor-pointer text-lg transition-colors duration-100',
+                'pi cursor-pointer transition-colors duration-100',
+                iconSize,
                 (hovered ?? modelValue ?? 0) >= star
                     ? 'pi-star-fill text-yellow-400'
                     : 'pi-star text-surface-300',

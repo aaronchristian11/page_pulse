@@ -8,13 +8,19 @@ import Menubar from 'primevue/menubar'
 import Button from 'primevue/button'
 import Badge from 'primevue/badge'
 import Toast from 'primevue/toast'
+import {useRecommendationsStore} from "@/stores/recommendations";
+import {useFollowsStore} from "@/stores/follows";
 
-const router = useRouter()
-const auth = useAuthStore()
-const books = useBooksStore()
-const groupShelves = useGroupShelvesStore()
+const router = useRouter();
+const auth = useAuthStore();
+const books = useBooksStore();
+const groupShelves = useGroupShelvesStore();
+const recommendations = useRecommendationsStore();
+const friends = useFollowsStore();
 
-const joinedGroupCount = computed(() => groupShelves.joinedGroups.length)
+const joinedGroupCount = computed(() => groupShelves.joinedGroups.length);
+const recommendationCount = computed(() => recommendations.unreadCount.length);
+const friendCount = computed(() => friends.followers.length);
 
 const menuItems = [
   { label: 'Catalogue', icon: 'pi pi-search', command: () => router.push('/') },
@@ -43,51 +49,61 @@ function logout() {
         </template>
         <template #end>
             <div class="flex items-center gap-3">
-
                 <!-- Shelf badge -->
                 <RouterLink to="/shelf" class="relative inline-flex">
                     <Button icon="pi pi-book" severity="secondary" text rounded
                             aria-label="My Shelf"/>
-                    <Badge
-                        v-if="books.shelf && books.shelf.length"
-                        :value="books.shelf.length"
-                        class="absolute -top-1 -right-1"
-                        size="small"
-                    />
+                    <Badge v-if="books.shelf && books.shelf.length"
+                           :value="books.shelf.length"
+                           class="absolute -top-1 -right-1"
+                           size="small" />
                 </RouterLink>
 
-        <RouterLink to="/groups" class="relative inline-flex">
-          <Button icon="pi pi-users" severity="secondary" text rounded aria-label="Group Shelves" />
-          <Badge
-            v-if="joinedGroupCount"
-            :value="joinedGroupCount"
-            class="absolute -top-1 -right-1"
-            severity="contrast"
-            size="small"
-          />
-        </RouterLink>
+                <RouterLink to="/groups" class="relative inline-flex">
+                    <Button icon="pi pi-users" severity="secondary" text rounded aria-label="Group Shelves" />
+                    <Badge v-if="joinedGroupCount"
+                         :value="joinedGroupCount"
+                         class="absolute -top-1 -right-1"
+                         severity="contrast"
+                         size="small" />
+                </RouterLink>
 
-        <!-- Logged in -->
-        <template v-if="auth.user">
-            <span class="text-sm text-surface-400">{{ auth.user.username }}</span>
-            <RouterLink to="/profile">
-                <Button
-                    icon="pi pi-user"
-                    severity="secondary"
-                    text
-                    rounded
-                    aria-label="My Profile"
-                />
-            </RouterLink>
-            <Button
-                icon="pi pi-sign-out"
-                severity="secondary"
-                text
-                rounded
-                aria-label="Sign out"
-                @click="logout"
-            />
-        </template>
+                <RouterLink to="/inbox">
+                    <Button icon="pi pi-inbox" severity="secondary" text rounded aria-label="Recommendations" />
+                    <Badge v-if="recommendationCount"
+                           :value="recommendationCount"
+                           class="absolute -top-1 -right-1"
+                           severity="contrast"
+                           size="small" />
+                </RouterLink>
+                <RouterLink to="/friends">
+                    <Button icon="pi pi-users" severity="secondary" text rounded aria-label="Friends" />
+                    <Badge v-if="friendCount"
+                           :value="friendCount"
+                           class="absolute -top-1 -right-1"
+                           severity="contrast"
+                           size="small" />
+                </RouterLink>
+
+                <!-- Logged in -->
+                <template v-if="auth.user">
+                    <span class="text-sm text-surface-400">{{ auth.user.username }}</span>
+                    <RouterLink to="/profile">
+                        <Button
+                            icon="pi pi-user"
+                            severity="secondary"
+                            text
+                            rounded
+                            aria-label="My Profile"
+                        />
+                    </RouterLink>
+                    <Button icon="pi pi-sign-out"
+                            severity="secondary"
+                            text
+                            rounded
+                            aria-label="Sign out"
+                            @click="logout" />
+                </template>
 
                 <!-- Not logged in -->
                 <template v-else>
