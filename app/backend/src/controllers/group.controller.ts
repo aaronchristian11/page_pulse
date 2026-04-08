@@ -44,7 +44,7 @@ export const createGroup = async (req: Request, res: Response) => {
         const [id] = await knex('groups').insert({ name, description });
 
         // User creating the group is admin of the group
-        const role_permission = rolePermission('administrator');
+        const role_permission = await rolePermission('administrator');
         await knex('user_groups').insert({ group_id: id, user_id: user.id, role_permission_id: role_permission.id });
 
         res.status(201).json({ message: 'Group created.', id });
@@ -109,7 +109,7 @@ export const joinGroup = async (req: Request, res: Response) => {
             return res.status(409).json({ error: 'User is already a member of this group.' });
         }
 
-        const role_permission = rolePermission('member');
+        const role_permission = await rolePermission('member');
 
         // Regular members get manage group permission but can only add books to the group
         await knex('user_groups').insert({ group_id: groupId, user_id: user.id, role_permission_id: role_permission.id });
