@@ -1,93 +1,93 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useReviewsStore } from '@/stores/reviews'
-import { useAuthStore } from '@/stores/auth'
-import StarRating from '@/components/StarRating.vue'
-import Button from 'primevue/button'
-import Textarea from 'primevue/textarea'
-import Divider from 'primevue/divider'
-import Badge from 'primevue/badge'
+    import { ref, computed, onMounted, watch } from 'vue'
+    import { useReviewsStore } from '@/stores/reviews'
+    import { useAuthStore } from '@/stores/auth'
+    import StarRating from '@/components/StarRating.vue'
+    import Button from 'primevue/button'
+    import Textarea from 'primevue/textarea'
+    import Divider from 'primevue/divider'
+    import Badge from 'primevue/badge'
 
-const props = defineProps<{
-    bookKey: string
-    groupId?: string | null
-}>()
+    const props = defineProps<{
+        bookKey: string
+        groupId?: string | null
+    }>()
 
-const reviewsStore = useReviewsStore()
-const authStore = useAuthStore()
+    const reviewsStore = useReviewsStore()
+    const authStore = useAuthStore()
 
-const draftRating = ref<number | null>(null)
-const draftText = ref('')
-const isSubmitting = ref(false)
-const submitError = ref<string | null>(null)
-const submitSuccess = ref(false)
+    const draftRating = ref<number | null>(null)
+    const draftText = ref('')
+    const isSubmitting = ref(false)
+    const submitError = ref<string | null>(null)
+    const submitSuccess = ref(false)
 
-const reviews = computed(() => reviewsStore.getReviews(props.bookKey, props.groupId))
+    const reviews = computed(() => reviewsStore.getReviews(props.bookKey, props.groupId))
 
-const myReview = computed(() =>
-    reviews.value.find((r) => r.username === authStore.user?.username)
-)
+    const myReview = computed(() =>
+        reviews.value.find((r) => r.username === authStore.user?.username)
+    )
 
-const averageRating = computed(() => {
-    if (!reviews.value.length) return null
-    const sum = reviews.value.reduce((acc, r) => acc + r.rating, 0)
-    return (sum / reviews.value.length).toFixed(1)
-})
-
-onMounted(() => {
-    reviewsStore.loadReviews(props.bookKey, props.groupId)
-})
-
-watch(
-    () => props.bookKey,
-    () => reviewsStore.loadReviews(props.bookKey, props.groupId)
-)
-
-// Pre-fill form if user already has a review
-watch(
-    myReview,
-    (rev) => {
-        if (rev && !draftRating.value) {
-            draftRating.value = rev.rating
-            draftText.value = rev.review_text ?? ''
-        }
-    },
-    { immediate: true }
-)
-
-async function submitReview() {
-    if (!draftRating.value) {
-        submitError.value = 'Please select a star rating.'
-        return
-    }
-    isSubmitting.value = true
-    submitError.value = null
-    submitSuccess.value = false
-    try {
-        await reviewsStore.submitReview(props.bookKey, draftRating.value, draftText.value, props.groupId)
-        submitSuccess.value = true
-        setTimeout(() => (submitSuccess.value = false), 3000)
-    } catch {
-        submitError.value = reviewsStore.error ?? 'Failed to submit review.'
-    } finally {
-        isSubmitting.value = false
-    }
-}
-
-async function deleteMyReview() {
-    if (!myReview.value) return
-    await reviewsStore.deleteReview(myReview.value.id, props.bookKey, props.groupId)
-    draftRating.value = null
-    draftText.value = ''
-}
-
-function formatDate(dateStr: string) {
-    return new Date(dateStr).toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
+    const averageRating = computed(() => {
+        if (!reviews.value.length) return null
+        const sum = reviews.value.reduce((acc, r) => acc + r.rating, 0)
+        return (sum / reviews.value.length).toFixed(1)
     })
-}
+
+    onMounted(() => {
+        reviewsStore.loadReviews(props.bookKey, props.groupId)
+    })
+
+    watch(
+        () => props.bookKey,
+        () => reviewsStore.loadReviews(props.bookKey, props.groupId)
+    )
+
+    // Pre-fill form if user already has a review
+    watch(
+        myReview,
+        (rev) => {
+            if (rev && !draftRating.value) {
+                draftRating.value = rev.rating
+                draftText.value = rev.review_text ?? ''
+            }
+        },
+        { immediate: true }
+    )
+
+    async function submitReview() {
+        if (!draftRating.value) {
+            submitError.value = 'Please select a star rating.'
+            return
+        }
+        isSubmitting.value = true
+        submitError.value = null
+        submitSuccess.value = false
+        try {
+            await reviewsStore.submitReview(props.bookKey, draftRating.value, draftText.value, props.groupId)
+            submitSuccess.value = true
+            setTimeout(() => (submitSuccess.value = false), 3000)
+        } catch {
+            submitError.value = reviewsStore.error ?? 'Failed to submit review.'
+        } finally {
+            isSubmitting.value = false
+        }
+    }
+
+    async function deleteMyReview() {
+        if (!myReview.value) return
+        await reviewsStore.deleteReview(myReview.value.id, props.bookKey, props.groupId)
+        draftRating.value = null
+        draftText.value = ''
+    }
+
+    function formatDate(dateStr: string) {
+        return new Date(dateStr).toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        })
+    }
 </script>
 
 <template>

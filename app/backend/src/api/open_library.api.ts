@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const BASE_URL = 'https://openlibrary.org';
-const COVERS_URL = 'https://covers.openlibrary.org/b';
+const COVERS_URL = 'https://covers.openlibrary.org';
 const headers = { 'User-Agent': 'PagePulse/1.0 (dev@pagepulse.app)' };
 
 export const openLibraryApi = {
@@ -29,6 +29,6 @@ export const openLibraryApi = {
     },
 
     async getCover(type: string, idAndSize: string) {
-        return axios.get(`${COVERS_URL}/${type}/${idAndSize}`, { responseType: 'stream' });
+        return axios.get(`${COVERS_URL}/${type}/id/${idAndSize}`, { responseType: 'stream' });
     },
 };

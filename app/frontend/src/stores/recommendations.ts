@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
@@ -41,7 +41,7 @@ export const useRecommendationsStore = defineStore('recommendations', () => {
     async function loadUnreadCount() {
         if (!authStore.user) return
         try {
-            const res = await axios.get('/api/recommendations/inbox/unread-count')
+            const res = await axios.get('/api/recommendations/inbox/unread-count');
             unreadCount.value = res.data.unread
         } catch {
             // Silent fail — badge not critical
@@ -50,7 +50,7 @@ export const useRecommendationsStore = defineStore('recommendations', () => {
 
     async function markAsRead(id: number) {
         try {
-            await axios.patch(`/api/recommendations/${id}/read`, {}, { headers: authHeaders() })
+            await axios.patch(`/api/recommendations/${id}/read`)
             const item = inbox.value.find((i) => i.id === id)
             if (item) {
                 item.is_read = true
@@ -78,6 +78,12 @@ export const useRecommendationsStore = defineStore('recommendations', () => {
     function clearError() {
         error.value = null
     }
+
+    watch(authStore.user, () => {
+        if (authStore.user) loadUnreadCount();
+    }, {
+        immediate: true
+    });
 
     return {
         inbox,

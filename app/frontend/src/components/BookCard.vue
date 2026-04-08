@@ -10,23 +10,17 @@ const store = useBooksStore()
 </script>
 
 <template>
-    <Card
-        class="book-card cursor-pointer hover:shadow-lg transition-shadow duration-200"
-        @click="emit('select', book)"
-    >
+    <Card class="book-card cursor-pointer hover:shadow-lg transition-shadow duration-200"
+          @click="emit('select', book)">
         <template #header>
             <div class="relative aspect-[2/3] overflow-hidden bg-surface-100 dark:bg-surface-800">
-                <img
-                    v-if="book.cover_i"
-                    :src="store.coverUrl(book.cover_i, 'M')"
-                    :alt="book.title"
-                    loading="lazy"
-                    class="w-full h-full object-cover"
-                />
-                <div
-                    v-else
-                    class="w-full h-full flex items-center justify-center text-5xl text-surface-400 font-serif"
-                >
+                <img v-if="book.cover_i"
+                     :src="store.coverUrl(book.cover_i, 'M')"
+                     :alt="book.title"
+                     loading="lazy"
+                     class="w-full h-full object-cover" />
+                <div v-else
+                     class="w-full h-full flex items-center justify-center text-5xl text-surface-400 font-serif">
                     {{ book.title.charAt(0) }}
                 </div>
             </div>
@@ -48,14 +42,12 @@ const store = useBooksStore()
 
         <template #footer>
             <div class="px-1 pb-1">
-                <Button
-                    :icon="store.isOnShelf(book.id) ? 'pi pi-check' : 'pi pi-plus'"
-                    :label="store.isOnShelf(book.id) ? 'On Shelf' : 'Add'"
-                    :severity="store.isOnShelf(book.id) ? 'secondary' : 'primary'"
-                    size="small"
-                    class="w-full"
-                    @click.stop="store.isOnShelf(book.id) ? store.removeFromShelf(book.id) : store.addToShelf(book)"
-                />
+                <Button :icon="store.isOnShelf(book.id) ? 'pi pi-check' : 'pi pi-plus'"
+                        :label="store.isOnShelf(book.id) ? 'On Shelf' : 'Add'"
+                        :severity="store.isOnShelf(book.id) ? 'secondary' : 'primary'"
+                        size="small"
+                        class="w-full"
+                        @click.stop="store.isOnShelf(book.id) ? store.removeFromShelf(book.id) : store.addToShelf(book)" />
             </div>
         </template>
     </Card>

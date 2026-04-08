@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import {User} from "../types/express";
+import type {User} from "../types/express.d.ts";
 import knex from "../db/database";
 
 export const followUser = async (req: Request, res: Response) => {
@@ -93,5 +93,53 @@ export const getFollowedUserShelf = async (req: Request, res: Response) => {
         res.json({ books: userBooks });
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to fetch shelf.' });
+    }
+};
+
+export const getFriendRecommendations = async (req: Request, res: Response) => {
+    const me = req.user as User;
+
+    try {
+        // Get IDs of users I follow
+        const followingRows = await knex('follows')
+            .where({ follower_id: me.id })
+            .select('following_id');
+
+        const followingIds = followingRows.map((r: any) => r.following_id);
+
+        if (!followingIds.length) {
+            return res.json({ recommendations: [] });
+        }
+
+        // Get books on my shelf
+        const myBooks = await knex('user_books')
+            .where({ user_id: me.id })
+            .select('book_id');
+        const myBookIds = myBooks.map((b: any) => b.book_id);
+
+        // Highly-rated (>= 4) books from people I follow that aren't on my shelf
+        const query = knex('user_books')
+            .join('books', 'user_books.book_id', 'books.id')
+            .join('users', 'user_books.user_id', 'users.id')
+            .whereIn('user_books.user_id', followingIds)
+            .where('user_books.rating', '>=', 4)
+            .select(
+                'books.key',
+                'books.id as book_id',
+                'user_books.rating',
+                'users.username as recommended_by'
+            )
+            .orderBy('user_books.rating', 'desc')
+            .limit(20);
+
+        if (myBookIds.length) {
+            query.whereNotIn('user_books.book_id', myBookIds);
+        }
+
+        const recommendations = await query;
+
+        res.json({ recommendations });
+    } catch (err: any) {
+        res.status(500).json({ error: 'Failed to fetch friend recommendations.' });
     }
 };

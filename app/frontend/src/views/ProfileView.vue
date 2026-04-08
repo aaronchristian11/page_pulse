@@ -108,12 +108,10 @@ onMounted(async () => {
                 </div>
 
                 <div v-else class="flex flex-col gap-3">
-                    <Card
-                        v-for="book in books.shelf"
-                        :key="book.id"
-                        class="cursor-pointer hover:shadow-md transition-shadow"
-                        @click="router.push(`/book/${book.id}`)"
-                    >
+                    <Card v-for="book in books.shelf"
+                          :key="book.id"
+                          class="cursor-pointer hover:shadow-md transition-shadow"
+                          @click="router.push(`/book/${book.id}`)" >
                         <template #content>
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-14 flex-shrink-0 rounded overflow-hidden bg-surface-100 dark:bg-surface-800">

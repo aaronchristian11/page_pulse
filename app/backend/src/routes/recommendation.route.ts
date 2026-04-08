@@ -11,4 +11,6 @@ const router = Router();
 router.post('/', sendRecommendation);
 router.get('/inbox', getInbox);
 router.get('/inbox/unread-count', getUnreadCount);
-router.get('/:id/read', markAsRead);
+router.patch('/:id/read', markAsRead);
+
+export default router;

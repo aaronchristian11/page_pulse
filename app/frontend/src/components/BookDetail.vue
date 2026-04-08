@@ -1,23 +1,26 @@
 <script setup lang="ts">
-import {computed} from 'vue'
-import {useBooksStore} from '@/stores/books'
-import Drawer from 'primevue/drawer'
-import Button from 'primevue/button'
-import Tag from 'primevue/tag'
-import ProgressSpinner from 'primevue/progressspinner'
-import Divider from 'primevue/divider'
+    import {computed} from 'vue'
+    import {useBooksStore} from '@/stores/books'
+    import Drawer from 'primevue/drawer'
+    import Button from 'primevue/button'
+    import Tag from 'primevue/tag'
+    import ProgressSpinner from 'primevue/progressspinner'
+    import Divider from 'primevue/divider'
+    import BookBuyButtons from '@/components/BookBuyButtons.vue'
+    import ReviewPanel from '@/components/ReviewPanel.vue'
+    import RecommendButton from '@/components/RecommendButton.vue'
 
-const store = useBooksStore()
+    const store = useBooksStore()
 
-const visible = computed({
-    get: () => store.selectedBook !== null,
-    set: (val) => {
-        if (!val) store.clearSelectedBook()
-    }
-})
+    const visible = computed({
+        get: () => store.selectedBook !== null,
+        set: (val) => {
+            if (!val) store.clearSelectedBook()
+        }
+    })
 
-const book = computed(() => store.selectedBook)
-const detail = computed(() => store.selectedWorkDetail)
+    const book = computed(() => store.selectedBook)
+    const detail = computed(() => store.selectedWorkDetail)
 </script>
 
 <template>
@@ -97,29 +100,30 @@ const detail = computed(() => store.selectedWorkDetail)
 
             <Divider/>
 
+            <!-- Buy buttons -->
+            <BookBuyButtons :isbn="book.isbn" :title="book.title" :author="book.author" />
+
             <!-- Actions -->
             <div class="flex flex-col gap-3">
-                <Button
-                    :icon="store.isOnShelf(book.id) ? 'pi pi-check' : 'pi pi-plus'"
-                    :label="store.isOnShelf(book.id) ? 'On My Shelf' : 'Add to Shelf'"
-                    :severity="store.isOnShelf(book.id) ? 'secondary' : 'primary'"
-                    class="w-full"
-                    @click="store.isOnShelf(book.id) ? store.removeFromShelf(book.id) : store.addToShelf(book)"
-                />
-                <a
-                    :href="`https://openlibrary.org/works/${book.id}`"
-                    target="_blank"
-                    rel="noopener"
-                    class="w-full"
-                >
-                    <Button
-                        label="View on Open Library"
-                        icon="pi pi-external-link"
-                        severity="secondary"
-                        outlined
+                <Button :icon="store.isOnShelf(book.id) ? 'pi pi-check' : 'pi pi-plus'"
+                        :label="store.isOnShelf(book.id) ? 'On My Shelf' : 'Add to Shelf'"
+                        :severity="store.isOnShelf(book.id) ? 'secondary' : 'primary'"
                         class="w-full"
-                    />
-                </a>
+                        @click="store.isOnShelf(book.id) ? store.removeFromShelf(book.id) : store.addToShelf(book)" />
+                <div class="flex gap-2">
+                    <RecommendButton :bookKey="book.id" :bookTitle="book.title" class="flex-1" />
+                    <a :href="`https://openlibrary.org/works/${book.id}`" target="_blank" rel="noopener" class="flex-1">
+                        <Button label="Open Library" icon="pi pi-external-link" severity="secondary" outlined class="w-full"/>
+                    </a>
+                </div>
+            </div>
+
+            <Divider/>
+
+            <!-- Reviews -->
+            <div>
+                <h3 class="font-semibold text-color mb-3">Reviews</h3>
+                <ReviewPanel :bookKey="book.id" />
             </div>
         </div>
     </Drawer>

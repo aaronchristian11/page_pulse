@@ -1,39 +1,39 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { useBooksStore } from '@/stores/books'
-import { useGroupShelvesStore } from '@/stores/groupShelves'
-import Menubar from 'primevue/menubar'
-import Button from 'primevue/button'
-import Badge from 'primevue/badge'
-import Toast from 'primevue/toast'
-import {useRecommendationsStore} from "@/stores/recommendations";
-import {useFollowsStore} from "@/stores/follows";
+    import { computed } from 'vue'
+    import { useRouter } from 'vue-router'
+    import { useAuthStore } from '@/stores/auth'
+    import { useBooksStore } from '@/stores/books'
+    import { useGroupShelvesStore } from '@/stores/groupShelves'
+    import {useRecommendationsStore} from "@/stores/recommendations";
+    import {useFollowsStore} from "@/stores/follows";
+    import Menubar from 'primevue/menubar'
+    import Button from 'primevue/button'
+    import Badge from 'primevue/badge'
+    import Toast from 'primevue/toast'
 
-const router = useRouter();
-const auth = useAuthStore();
-const books = useBooksStore();
-const groupShelves = useGroupShelvesStore();
-const recommendations = useRecommendationsStore();
-const friends = useFollowsStore();
+    const router = useRouter();
+    const auth = useAuthStore();
+    const books = useBooksStore();
+    const groupShelves = useGroupShelvesStore();
+    const recommendations = useRecommendationsStore();
+    const friends = useFollowsStore();
 
-const joinedGroupCount = computed(() => groupShelves.joinedGroups.length);
-const recommendationCount = computed(() => recommendations.unreadCount.length);
-const friendCount = computed(() => friends.followers.length);
+    const joinedGroupCount = computed(() => groupShelves.joinedGroups.length);
+    const recommendationCount = computed(() => recommendations.unreadCount);
+    const friendCount = computed(() => friends.followers.length);
 
-const menuItems = [
-  { label: 'Catalogue', icon: 'pi pi-search', command: () => router.push('/') },
-  { label: 'My Shelf', icon: 'pi pi-book', command: () => router.push('/shelf') },
-  { label: 'Group Shelves', icon: 'pi pi-users', command: () => router.push('/groups') },
-]
+    const menuItems = [
+      { label: 'Catalogue', icon: 'pi pi-search', command: () => router.push('/') },
+      { label: 'My Shelf', icon: 'pi pi-book', command: () => router.push('/shelf') },
+      { label: 'Group Shelves', icon: 'pi pi-users', command: () => router.push('/groups') },
+    ]
 
-function logout() {
-  auth.setUser(null)
-  books.shelf = [];
-  groupShelves.groups = []
-  router.push('/')
-}
+    function logout() {
+      auth.setUser(null)
+      books.shelf = [];
+      groupShelves.groups = []
+      router.push('/')
+    }
 </script>
 
 <template>
@@ -68,17 +68,18 @@ function logout() {
                          size="small" />
                 </RouterLink>
 
-                <RouterLink to="/inbox">
+                <RouterLink to="/inbox" class="relative inline-flex">
                     <Button icon="pi pi-inbox" severity="secondary" text rounded aria-label="Recommendations" />
-                    <Badge v-if="recommendationCount"
+                    <Badge v-if="recommendationCount >= 0"
                            :value="recommendationCount"
                            class="absolute -top-1 -right-1"
                            severity="contrast"
                            size="small" />
                 </RouterLink>
-                <RouterLink to="/friends">
+
+                <RouterLink to="/friends" class="relative inline-flex">
                     <Button icon="pi pi-users" severity="secondary" text rounded aria-label="Friends" />
-                    <Badge v-if="friendCount"
+                    <Badge v-if="friendCount >= 0"
                            :value="friendCount"
                            class="absolute -top-1 -right-1"
                            severity="contrast"

@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import {User} from "../types/express";
+import type {User} from "../types/express.d.ts";
 import knex from "../db/database";
 
 export const sendRecommendation = async (req: Request, res: Response) => {

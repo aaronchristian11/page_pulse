@@ -58,6 +58,13 @@ export const getCover = async (req: Request, res: Response) => {
     try {
         const { type, idAndSize } = req.params;
         const response = await openLibraryApi.getCover(type, idAndSize);
+
+        // Forward content-type header so browser knows it’s an image
+        res.setHeader('Content-Type', 'image/jpeg');
+
+        // Optional: Cache for 1 day
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+
         response.data.pipe(res);
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to fetch cover.' });
