@@ -10,11 +10,14 @@ export const getShelfBooks = async (req: Request, res: Response) => {
         const user_books = await knex('user_books')
             .join('books', 'user_books.book_id', 'books.id')
             .where('user_books.user_id', userId)
-            .select('books.key');
+            .select('books.key', 'user_books.rating');
         const books = await Promise.all(
-            user_books.map((user_book: any) => openLibraryApi.getWork(user_book.key))
-        );
-        res.json({ books });
+        user_books.map(async (user_book: any) => {
+            const work = await openLibraryApi.getWork(user_book.key);
+            return { ...work, rating: user_book.rating ?? null };
+        })
+    );
+    res.json({ books });
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to get books.' });
     }
@@ -67,5 +70,34 @@ export const removeBookFromShelf = async (req: Request, res: Response) => {
         res.json({ message: 'The book has been removed from the shelf.' });
     } catch (err: any) {
         res.status(err.statusCode || 500).json({ error: err.message || 'Failed to add book to shelf.' });
+    }
+};
+
+export const rateBook = async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const { book_key, rating } = req.body;
+
+    if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ error: 'Rating must be between 1 and 5.' });
+    }
+
+    try {
+        const book = await knex('books').where({ key: book_key }).first();
+
+        if (!book) {
+            return res.status(404).json({ error: 'Book not found.' });
+        }
+
+        const updated = await knex('user_books')
+            .where({ user_id: userId, book_id: book.id })
+            .update({ rating });
+
+        if (!updated) {
+            return res.status(404).json({ error: 'Book is not on your shelf.' });
+        }
+
+        res.json({ message: 'Rating saved.' });
+    } catch (err: any) {
+        res.status(500).json({ error: 'Failed to save rating.' });
     }
 };
