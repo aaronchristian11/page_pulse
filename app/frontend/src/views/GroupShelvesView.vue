@@ -241,10 +241,10 @@ function initials(username: string) {
   <main class="flex flex-col gap-6 p-6 max-w-6xl mx-auto">
 
     <!-- ── Page Header ─────────────────────────────────────────────────────── -->
-    <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 class="text-3xl font-bold text-color">Group Shelves</h1>
-        <p class="text-sm text-surface-400 mt-1">
+        <h1 class="text-4xl font-bold text-color">Group Shelves</h1>
+        <p class="text-base text-surface-400 mt-2">
           Join a group to build a shared bookshelf together.
         </p>
       </div>
@@ -286,7 +286,7 @@ function initials(username: string) {
         <!-- Group switcher -->
         <Card>
           <template #title>
-            <h2 class="text-base font-semibold text-color">Your Groups</h2>
+            <h2 class="text-lg font-semibold text-color">Your Groups</h2>
           </template>
           <template #content>
             <div class="flex flex-col gap-1">
@@ -294,7 +294,7 @@ function initials(username: string) {
                 v-for="group in groups.joinedGroups"
                 :key="group.id"
                 :class="[
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors w-full',
+                  'flex items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors w-full',
                   groups.activeGroupId === group.id
                     ? 'bg-primary text-white'
                     : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-color',
@@ -302,7 +302,7 @@ function initials(username: string) {
                 @click="groups.selectGroup(group.id); activeTab = 'shelf'"
               >
                 <i class="pi pi-users text-sm" />
-                <span class="flex-1 font-medium text-sm truncate">{{ group.name }}</span>
+                <span class="flex-1 font-medium text-base truncate">{{ group.name }}</span>
                 <Tag
                   v-if="group.currentUserRole === 'admin'"
                   value="Admin"
@@ -318,7 +318,7 @@ function initials(username: string) {
         <Card v-if="activeGroup">
           <template #title>
             <div class="flex items-center justify-between">
-              <h2 class="text-base font-semibold text-color">Members</h2>
+              <h2 class="text-lg font-semibold text-color">Members</h2>
               <div class="flex items-center gap-2">
                 <Tag :value="`${activeGroup.memberCount}`" severity="secondary" />
                 <Button
@@ -339,7 +339,7 @@ function initials(username: string) {
               <div
                 v-for="member in groups.activeGroupMembers"
                 :key="member.username"
-                class="flex items-center gap-3 rounded-lg p-2"
+                class="flex items-center gap-3 rounded-lg p-3"
               >
                 <Avatar
                   :label="initials(member.username)"
@@ -347,11 +347,11 @@ function initials(username: string) {
                   :class="member.role === 'admin' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200' : 'bg-surface-100 dark:bg-surface-800 text-color'"
                 />
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-color truncate">
+                  <p class="text-base font-medium text-color truncate">
                     {{ member.username }}
                     <span v-if="member.username === currentUsername" class="text-surface-400 font-normal"> (you)</span>
                   </p>
-                  <p class="text-xs text-surface-400 capitalize">{{ member.role }}</p>
+                  <p class="text-sm text-surface-400 capitalize">{{ member.role }}</p>
                 </div>
 
                 <!-- Admin controls -->
@@ -388,8 +388,8 @@ function initials(username: string) {
         <!-- Group header -->
         <div class="flex items-center justify-between gap-3 flex-wrap">
           <div>
-            <h2 class="text-2xl font-bold text-color">{{ activeGroup.name }}</h2>
-            <p class="text-sm text-surface-400">{{ activeGroup.description }}</p>
+            <h2 class="text-3xl font-bold text-color">{{ activeGroup.name }}</h2>
+            <p class="text-base text-surface-400 mt-1">{{ activeGroup.description }}</p>
           </div>
           <Tag
             v-if="isAdmin"
@@ -408,7 +408,7 @@ function initials(username: string) {
             ]"
             :key="tab.key"
             :class="[
-              'flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+              'flex items-center gap-2 px-4 py-3 text-base font-medium border-b-2 -mb-px transition-colors',
               activeTab === tab.key
                 ? 'border-primary text-primary'
                 : 'border-transparent text-surface-400 hover:text-color',
@@ -435,7 +435,7 @@ function initials(username: string) {
                     type="button"
                     @click="openBookDetail(entry.book)"
                   >
-                    <div class="h-20 w-14 flex-shrink-0 overflow-hidden rounded bg-surface-100 dark:bg-surface-800">
+                    <div class="h-28 w-20 flex-shrink-0 overflow-hidden rounded bg-surface-100 dark:bg-surface-800">
                       <img
                         v-if="entry.book.cover_i"
                         :src="books.coverUrl(entry.book.cover_i, 'S')"
@@ -447,10 +447,10 @@ function initials(username: string) {
                       </div>
                     </div>
                     <div class="min-w-0 flex-1">
-                      <p class="font-semibold text-color group-hover:text-primary transition-colors line-clamp-2">
+                      <p class="font-semibold text-base text-color group-hover:text-primary transition-colors line-clamp-2">
                         {{ entry.book.title }}
                       </p>
-                      <p v-if="entry.book.author" class="text-sm text-primary mt-0.5">{{ entry.book.author }}</p>
+                      <p v-if="entry.book.author" class="text-base text-primary mt-1">{{ entry.book.author }}</p>
                       <div class="flex items-center gap-2 mt-1 flex-wrap">
                         <Tag
                           :value="isOwnBook(entry) ? 'Added by you' : `Added by ${entry.addedBy}`"
@@ -461,8 +461,8 @@ function initials(username: string) {
                           {{ new Date(entry.addedAt).toLocaleDateString() }}
                         </span>
                       </div>
-                      <p v-if="entry.note" class="mt-2 text-sm text-color leading-relaxed">{{ entry.note }}</p>
-                      <p v-else class="mt-2 text-sm italic text-surface-400">No note added.</p>
+                      <p v-if="entry.note" class="mt-2 text-base text-color leading-relaxed">{{ entry.note }}</p>
+                      <p v-else class="mt-2 text-base italic text-surface-400">No note added.</p>
                     </div>
                   </button>
 
@@ -494,7 +494,7 @@ function initials(username: string) {
           <div v-else class="rounded-xl border border-dashed border-surface-300 dark:border-surface-700 p-10 text-center">
             <i class="pi pi-book text-4xl text-surface-300" />
             <p class="mt-3 font-semibold text-color">No books yet</p>
-            <p class="text-sm text-surface-400 mt-1">Switch to "Add Books" to recommend the first one.</p>
+            <p class="text-base text-surface-400 mt-2">Switch to "Add Books" to recommend the first one.</p>
             <Button label="Add Books" icon="pi pi-search" class="mt-4" size="small" @click="activeTab = 'discover'" />
           </div>
         </div>
@@ -520,7 +520,7 @@ function initials(username: string) {
               <template #content>
                 <div class="flex h-full flex-col gap-3">
                   <div class="flex gap-3">
-                    <div class="h-20 w-14 flex-shrink-0 overflow-hidden rounded bg-surface-100 dark:bg-surface-800">
+                    <div class="h-28 w-20 flex-shrink-0 overflow-hidden rounded bg-surface-100 dark:bg-surface-800">
                       <img
                         v-if="book.cover_i"
                         :src="books.coverUrl(book.cover_i, 'S')"
@@ -532,9 +532,9 @@ function initials(username: string) {
                       </div>
                     </div>
                     <div class="min-w-0 flex-1">
-                      <p class="font-semibold text-color line-clamp-2 text-sm">{{ book.title }}</p>
-                      <p v-if="book.author" class="text-xs text-primary truncate mt-0.5">{{ book.author }}</p>
-                      <p v-if="book.first_publish_year" class="text-xs text-surface-400 mt-1">{{ book.first_publish_year }}</p>
+                      <p class="font-semibold text-color line-clamp-2 text-base">{{ book.title }}</p>
+                      <p v-if="book.author" class="text-sm text-primary truncate mt-1">{{ book.author }}</p>
+                      <p v-if="book.first_publish_year" class="text-sm text-surface-400 mt-1">{{ book.first_publish_year }}</p>
                     </div>
                   </div>
                   <div class="mt-auto flex flex-col gap-2">
@@ -587,8 +587,8 @@ function initials(username: string) {
     <!-- ── No active group: show group browser ────────────────────────────── -->
     <div v-else class="flex flex-col gap-6">
       <div>
-        <h2 class="text-xl font-semibold text-color">Available Groups</h2>
-        <p class="text-sm text-surface-400 mt-0.5">Join one to unlock its shared shelf.</p>
+        <h2 class="text-2xl font-semibold text-color">Available Groups</h2>
+        <p class="text-base text-surface-400 mt-1">Join one to unlock its shared shelf.</p>
       </div>
 
       <div class="grid gap-4 md:grid-cols-2">
@@ -600,8 +600,8 @@ function initials(username: string) {
           <template #title>
             <div class="flex items-start justify-between gap-3">
               <div>
-                <h3 class="text-lg font-semibold text-color">{{ group.name }}</h3>
-                <p class="mt-1 text-sm text-surface-400">{{ group.description }}</p>
+                <h3 class="text-xl font-semibold text-color">{{ group.name }}</h3>
+                <p class="mt-2 text-base text-surface-400">{{ group.description }}</p>
               </div>
               <Tag
                 :value="group.isJoined ? 'Joined' : 'Open'"
@@ -610,7 +610,7 @@ function initials(username: string) {
             </div>
           </template>
           <template #content>
-            <div class="flex gap-4 text-sm text-surface-400">
+            <div class="flex gap-4 text-base text-surface-400">
               <span><i class="pi pi-users mr-1" />{{ group.memberCount }} member{{ group.memberCount !== 1 ? 's' : '' }}</span>
               <span><i class="pi pi-book mr-1" />{{ group.bookCount }} book{{ group.bookCount !== 1 ? 's' : '' }}</span>
             </div>
@@ -638,7 +638,7 @@ function initials(username: string) {
       <!-- empty state if no groups at all -->
       <Card v-if="!groups.groups.length" class="border border-dashed border-surface-300 dark:border-surface-700">
         <template #content>
-          <div class="flex flex-col items-center gap-3 py-8 text-center">
+          <div class="flex flex-col items-center gap-6 py-16 text-center">
             <i class="pi pi-users text-4xl text-surface-300" />
             <p class="font-semibold text-color">No groups yet</p>
             <p class="text-sm text-surface-400">Be the first to create one!</p>

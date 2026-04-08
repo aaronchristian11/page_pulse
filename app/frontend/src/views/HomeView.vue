@@ -13,6 +13,17 @@ const store = useBooksStore()
 const groups = useGroupShelvesStore()
 const router = useRouter()
 
+const genres = [
+    { label: 'Academic & Scholarly',  query: 'academic',               icon: 'pi pi-graduation-cap' },
+    { label: 'Action & Adventure',    query: 'action adventure',       icon: 'pi pi-bolt' },
+    { label: 'All-Time Classics',     query: 'classic',                icon: 'pi pi-star' },
+    { label: 'Comedy & Humour',       query: 'comedy',                 icon: 'pi pi-face-smile' },
+    { label: 'For Children',          query: 'Children\'s fiction',    icon: 'pi pi-heart' },
+    { label: 'History & Documentary', query: 'history',                icon: 'pi pi-book' },
+    { label: 'Horror & Thriller',     query: 'horror',                 icon: 'pi pi-eye' },
+    { label: 'Romance & Fantasy',     query: 'romance',                icon: 'pi pi-sparkles' },
+]
+
 function openDetail(book: Book) {
     store.selectBook(book);
 }
@@ -31,20 +42,24 @@ onMounted(() => {
               <h1 class="text-3xl font-bold text-color">Book Catalogue</h1>
               <p class="text-surface-400 text-sm">Search and discover books from the Open Library</p>
           </div>
-
-          <!-- Groups CTA -->
-          <Button
-            :label="groups.joinedGroups.length ? `My Groups (${groups.joinedGroups.length})` : 'Group Shelves'"
-            icon="pi pi-users"
-            :badge="groups.joinedGroups.length ? String(groups.joinedGroups.length) : undefined"
-            severity="secondary"
-            outlined
-            @click="router.push('/groups')"
-          />
         </div>
 
         <!-- Search Bar -->
         <Search/>
+
+        <!-- Genre Tags -->
+        <div class="genre-grid">
+            <button
+                v-for="genre in genres"
+                :key="genre.label"
+                class="genre-btn"
+                :class="{ 'genre-btn--active': store.searchQuery === genre.query }"
+                @click="store.searchBooks(genre.query)"
+            >
+                <i :class="genre.icon"/>
+                <span>{{ genre.label }}</span>
+            </button>
+        </div>
 
         <!-- Results Count -->
         <p v-if="store.totalResults && !store.isLoading && store.searchQuery !== ''" class="text-sm text-surface-400">
@@ -122,3 +137,63 @@ onMounted(() => {
     <!-- Book Detail Drawer -->
     <BookDetail/>
 </template>
+
+<style scoped>
+.genre-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+
+.genre-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.75rem;
+    height: 2.5rem;
+    width: 100%;
+    border-radius: 9999px;
+    border: 1px solid var(--p-surface-300, #cbd5e1);
+    background: var(--p-surface-0, #ffffff);
+    color: var(--p-surface-600, #475569);
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.genre-btn:hover {
+    border-color: var(--p-primary-500, #6366f1);
+    color: var(--p-primary-500, #6366f1);
+    background: var(--p-primary-50, #eef2ff);
+}
+
+.genre-btn--active {
+    background: var(--p-primary-500, #6366f1);
+    border-color: var(--p-primary-500, #6366f1);
+    color: #ffffff;
+}
+
+.genre-btn--active:hover {
+    background: var(--p-primary-600, #4f46e5);
+    border-color: var(--p-primary-600, #4f46e5);
+    color: #ffffff;
+}
+
+/* Dark mode */
+:root[class*="dark"] .genre-btn,
+.dark .genre-btn {
+    background: var(--p-surface-800, #1e293b);
+    border-color: var(--p-surface-600, #475569);
+    color: var(--p-surface-300, #cbd5e1);
+}
+
+:root[class*="dark"] .genre-btn:hover,
+.dark .genre-btn:hover {
+    border-color: var(--p-primary-400, #818cf8);
+    color: var(--p-primary-400, #818cf8);
+    background: var(--p-surface-700, #334155);
+}
+</style>
