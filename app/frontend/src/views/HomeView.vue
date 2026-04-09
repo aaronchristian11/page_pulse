@@ -7,21 +7,21 @@ import BookCard from '@/components/BookCard.vue';
 import BookDetail from '@/components/BookDetail.vue';
 import Button from 'primevue/button';
 import { useRouter } from 'vue-router';
-import type {Book} from '@/stores/books';
+import type { Book } from '@/stores/books';
 
 const store = useBooksStore()
 const groups = useGroupShelvesStore()
 const router = useRouter()
 
 const genres = [
-    { label: 'Academic & Scholarly',  query: 'academic',               icon: 'pi pi-graduation-cap' },
-    { label: 'Action & Adventure',    query: 'action adventure',       icon: 'pi pi-bolt' },
-    { label: 'All-Time Classics',     query: 'classic',                icon: 'pi pi-star' },
-    { label: 'Comedy & Humour',       query: 'comedy',                 icon: 'pi pi-face-smile' },
-    { label: 'For Children',          query: 'Children\'s fiction',    icon: 'pi pi-heart' },
-    { label: 'History & Documentary', query: 'history',                icon: 'pi pi-book' },
-    { label: 'Horror & Thriller',     query: 'horror',                 icon: 'pi pi-eye' },
-    { label: 'Romance & Fantasy',     query: 'romance',                icon: 'pi pi-sparkles' },
+    { label: 'Academic & Scholarly',  query: 'academic',              icon: 'pi pi-graduation-cap' },
+    { label: 'Action & Adventure',    query: 'action adventure',      icon: 'pi pi-bolt' },
+    { label: 'All-Time Classics',     query: 'classic',               icon: 'pi pi-star' },
+    { label: 'Comedy & Humour',       query: 'comedy',                icon: 'pi pi-face-smile' },
+    { label: 'For Children',          query: "Children's fiction",    icon: 'pi pi-heart' },
+    { label: 'History & Documentary', query: 'history',               icon: 'pi pi-book' },
+    { label: 'Horror & Thriller',     query: 'horror',                icon: 'pi pi-eye' },
+    { label: 'Romance & Fantasy',     query: 'romance',               icon: 'pi pi-sparkles' },
 ]
 
 // ── Date filters ─────────────────────────────────────────
