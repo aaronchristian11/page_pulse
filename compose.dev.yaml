@@ -16,7 +16,6 @@ services:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
     restart: unless-stopped
-    command: sh -c "npx tsx watch --clear-screen=false src/index.ts"
 
   frontend:
     container_name: vue_dev

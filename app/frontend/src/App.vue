@@ -1,6 +1,6 @@
 <script setup lang="ts">
     import { computed } from 'vue'
-    import { useRouter } from 'vue-router'
+    import { useRouter, useRoute } from 'vue-router'
     import { useAuthStore } from '@/stores/auth'
     import { useBooksStore } from '@/stores/books'
     import { useGroupShelvesStore } from '@/stores/groupShelves'
@@ -12,12 +12,14 @@
     import Toast from 'primevue/toast'
 
     const router = useRouter();
+    const route = useRoute()
     const auth = useAuthStore();
     const books = useBooksStore();
     const groupShelves = useGroupShelvesStore();
     const recommendations = useRecommendationsStore();
     const friends = useFollowsStore();
 
+    const isLanding = computed(() => route.name === 'landing')
     const joinedGroupCount = computed(() => groupShelves.joinedGroups.length);
     const recommendationCount = computed(() => recommendations.unreadCount);
     const friendCount = computed(() => friends.followers.length);
@@ -37,7 +39,7 @@
 </script>
 
 <template>
-    <Toast position="top-center"/>
+  <Toast position="top-center" />
 
     <Menubar :model="menuItems" class="border-0 border-b rounded-none px-4">
         <template #start>
