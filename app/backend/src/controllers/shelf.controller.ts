@@ -11,14 +11,14 @@ export const getShelfBooks = async (req: Request, res: Response) => {
         const user_books = await knex('user_books')
             .join('books', 'user_books.book_id', 'books.id')
             .where('user_books.user_id', userId)
-            .select('books.id' , 'books.key', 'user_books.rating');
+            .select('books.id', 'books.key', 'user_books.rating', 'user_books.reading_status');
 
         const books = await Promise.all(
             user_books.map(async (user_book: any) => {
                 const work = await bookCache.getOrFetch(user_book.key, () =>
                     openLibraryApi.getWork(user_book.key)
                 );
-                return { ...work, rating: user_book.rating ?? null };
+                return { ...work, rating: user_book.rating ?? null, reading_status: user_book.reading_status ?? null };
             })
         );
 
@@ -111,5 +111,36 @@ export const rateBook = async (req: Request, res: Response) => {
         res.json({ message: 'Rating saved.' });
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to save rating.' });
+    }
+};
+export const setReadingStatus = async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const { book_key, status } = req.body;
+
+    const valid = ['reading', 'upcoming', 'completed', 'dropped', ''];
+    if (status === undefined || !valid.includes(status)) {
+        return res.status(400).json({ error: 'Status must be one of: reading, upcoming, completed, dropped (or empty to clear).' });
+    }
+
+    // Empty string means clear the status
+    const statusValue = status === '' ? null : status;
+
+    try {
+        const book = await knex('books').where({ key: book_key }).first();
+        if (!book) {
+            return res.status(404).json({ error: 'Book not found on shelf.' });
+        }
+
+        const updated = await knex('user_books')
+            .where({ user_id: userId, book_id: book.id })
+            .update({ reading_status: statusValue });
+
+        if (!updated) {
+            return res.status(404).json({ error: 'Book is not on your shelf.' });
+        }
+
+        res.json({ message: 'Reading status saved.', status: statusValue });
+    } catch (err: any) {
+        res.status(500).json({ error: 'Failed to save reading status.' });
     }
 };

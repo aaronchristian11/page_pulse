@@ -22,6 +22,33 @@
     const book = computed(() => store.selectedBook)
     const detail = computed(() => store.selectedWorkDetail)
 
+    const onShelf = computed(() => book.value ? store.isOnShelf(book.value.id) : false)
+
+    const currentStatus = computed(() => {
+        if (!book.value) return null
+        const shelvedBook = store.shelf?.find(b => b.id === book.value!.id)
+        return shelvedBook?.reading_status ?? null
+    })
+
+    const statusOptions = [
+        { value: 'reading',   label: 'Reading',   icon: 'pi pi-book',         color: '2563EB' },
+        { value: 'upcoming',  label: 'Upcoming',  icon: 'pi pi-clock',        color: '7C3AED' },
+        { value: 'completed', label: 'Completed', icon: 'pi pi-check-circle', color: '16A34A' },
+        { value: 'dropped',   label: 'Dropped',   icon: 'pi pi-times-circle', color: 'DC2626' },
+    ]
+
+    async function handleStatus(status: string) {
+        if (!book.value) return
+        // If clicking the active status, clear it
+        const next = currentStatus.value === status ? null : status
+        if (next === null) {
+            // Send an empty-string to clear — backend allows null
+            await store.setReadingStatus(book.value.normalizedKey, '')
+        } else {
+            await store.setReadingStatus(book.value.normalizedKey, next)
+        }
+    }
+
     console.log(book, visible);
 </script>
 
@@ -118,6 +145,28 @@
                 </div>
             </div>
 
+            <!-- Reading Status (only shown when book is on shelf) -->
+            <div v-if="onShelf">
+                <Divider/>
+                <h3 class="font-semibold text-color mb-3">Reading Status</h3>
+                <div class="status-grid">
+                    <button
+                        v-for="opt in statusOptions"
+                        :key="opt.value"
+                        class="status-btn"
+                        :class="{ 'status-btn--active': currentStatus === opt.value }"
+                        :style="currentStatus === opt.value ? `--status-color: #${opt.color}` : ''"
+                        @click="handleStatus(opt.value)"
+                    >
+                        <i :class="opt.icon" class="text-sm"/>
+                        <span>{{ opt.label }}</span>
+                    </button>
+                </div>
+                <p v-if="currentStatus" class="text-xs text-surface-400 mt-2 text-center">
+                    Click again to clear status
+                </p>
+            </div>
+
             <Divider/>
 
             <!-- Reviews -->
@@ -128,3 +177,55 @@
         </div>
     </Drawer>
 </template>
+
+<style scoped>
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.status-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--p-surface-300, #cbd5e1);
+    background: var(--p-surface-0, #ffffff);
+    color: var(--p-surface-600, #475569);
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.status-btn:hover {
+    border-color: var(--p-primary-400, #818cf8);
+    color: var(--p-primary-500, #6366f1);
+    background: var(--p-primary-50, #eef2ff);
+}
+
+.status-btn--active {
+    background: color-mix(in srgb, var(--status-color, #6366f1) 12%, transparent);
+    border-color: var(--status-color, #6366f1);
+    color: var(--status-color, #6366f1);
+    font-weight: 600;
+}
+
+/* Dark mode */
+:root[class*="dark"] .status-btn,
+.dark .status-btn {
+    background: var(--p-surface-800, #1e293b);
+    border-color: var(--p-surface-600, #475569);
+    color: var(--p-surface-300, #cbd5e1);
+}
+
+:root[class*="dark"] .status-btn--active,
+.dark .status-btn--active {
+    background: color-mix(in srgb, var(--status-color, #6366f1) 20%, transparent);
+    border-color: var(--status-color, #6366f1);
+    color: var(--status-color, #6366f1);
+}
+</style>
