@@ -155,6 +155,21 @@ export const useBooksStore = defineStore('books', () => {
         return coverId ? openLibraryApi.covers.byId(coverId, size) : openLibraryApi.covers.placeholder()
     }
 
+    async function setReadingStatus(bookKey: string, status: string) {
+        if (!user.value) return;
+        await axios.patch(`/api/shelves/${user.value.id}/book/status`, {
+            book_key: bookKey,
+            status,
+        }).then(() => {
+            if (shelf.value) {
+                const target = shelf.value.find(b => b.normalizedKey === bookKey);
+                if (target) target.reading_status = status;
+            }
+        }).catch(err => {
+            error.value = err.response?.data?.error || 'Failed to save reading status.';
+        });
+    }
+
     async function rateBook(bookKey: string, rating: number) {
         if (!user.value) return;
 
@@ -176,6 +191,6 @@ export const useBooksStore = defineStore('books', () => {
         shelf, selectedBook, selectedWorkDetail, isLoadingDetail,
         searchBooks, selectBook, clearSelectedBook,
         addToShelf, removeFromShelf, isOnShelf, coverUrl, fetchShelf, setShelf,
-        rateBook
+        rateBook, setReadingStatus
     }
 })
