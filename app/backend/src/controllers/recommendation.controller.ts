@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
 import type {User} from "../types/express.d.ts";
 import knex from "../db/database";
+import {bookCache} from "../cache/book.cache";
+import {openLibraryApi} from "../api/open_library.api";
 
 export const sendRecommendation = async (req: Request, res: Response) => {
     const me = req.user as User;
@@ -72,7 +74,7 @@ export const getInbox = async (req: Request, res: Response) => {
     const me = req.user as User;
 
     try {
-        const inbox = await knex('recommendations')
+        const rawInbox = await knex('recommendations')
             .join('users as sender', 'recommendations.sender_id', 'sender.id')
             .join('books', 'recommendations.book_id', 'books.id')
             .where('recommendations.recipient_id', me.id)
@@ -85,9 +87,22 @@ export const getInbox = async (req: Request, res: Response) => {
                 'sender.username as sender_username',
                 'sender.first_name as sender_first_name',
                 'sender.last_name as sender_last_name',
-                'books.key as book_key'
+                'books.key'
             )
             .orderBy('recommendations.created_at', 'desc');
+
+        const inbox = await Promise.all(
+            rawInbox.map(async (item: any) => {
+                const work = await bookCache.getOrFetch(item.key, () =>
+                    openLibraryApi.getWork(item.key)
+                );
+
+                return {
+                    ...item,
+                    ...work
+                };
+            })
+        );
 
         res.json({ inbox });
     } catch (err: any) {

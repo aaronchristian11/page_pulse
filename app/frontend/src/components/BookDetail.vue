@@ -21,6 +21,8 @@
 
     const book = computed(() => store.selectedBook)
     const detail = computed(() => store.selectedWorkDetail)
+
+    console.log(book, visible);
 </script>
 
 <template>

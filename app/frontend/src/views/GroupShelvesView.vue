@@ -3,7 +3,7 @@
     import { useRouter } from 'vue-router'
     import { useToast } from 'primevue/usetoast'
     import { useAuthStore } from '@/stores/auth'
-    import { useBooksStore, type Book } from '@/stores/books'
+    import { useBooksStore, Book } from '@/stores/books'
     import { useGroupShelvesStore, type GroupMember } from '@/stores/groupShelves'
     import BookCard from '@/components/BookCard.vue'
     import BookDetail from '@/components/BookDetail.vue'

@@ -2,6 +2,7 @@ import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
+import {toBook} from "@/stores/books";
 
 export interface InboxItem {
     id: number
@@ -30,7 +31,7 @@ export const useRecommendationsStore = defineStore('recommendations', () => {
         try {
             isLoading.value = true
             const res = await axios.get('/api/recommendations/inbox')
-            inbox.value = res.data.inbox
+            inbox.value = res.data.inbox.map(toBook);
         } catch (err: any) {
             error.value = err.response?.data?.error ?? 'Failed to load inbox.'
         } finally {

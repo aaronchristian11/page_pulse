@@ -27,12 +27,12 @@ export function toBook(b: BookSearchResult): Book {
         key: b.key,
         normalizedKey: normalizeKey(b.key),
         addedBy: `${b.first_name} ${b.last_name}` ?? 'N/A',
-        addedByUserId: b.user_id,
+        addedByUserId: b.user_id ?? 'N/A',
         title: b.title,
         author: b.author ?? 'N/A',
         cover_i: b.cover_i,
-        first_publish_year: b.first_publish_year ?? 'N/A',
-        rating: b.rating
+        first_publish_year: b.first_publish_year ?? undefined,
+        ...b
     }
 }
 

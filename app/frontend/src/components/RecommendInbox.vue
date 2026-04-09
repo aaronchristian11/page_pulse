@@ -2,9 +2,10 @@
     import { onMounted } from 'vue'
     import { useRecommendationsStore } from '@/stores/recommendations'
     import { useAuthStore } from '@/stores/auth'
-    import { useBooksStore } from '@/stores/books'
+    import {type Book, useBooksStore} from '@/stores/books'
     import Button from 'primevue/button'
     import Badge from 'primevue/badge'
+    import BookDetail from "@/components/BookDetail.vue";
 
     const recStore = useRecommendationsStore()
     const authStore = useAuthStore()
@@ -24,20 +25,12 @@
         })
     }
 
-    function coverUrl(bookKey: string) {
-        // Try to get cover from the books store cache; fall back to placeholder
-        const workId = bookKey.replace('/works/', '')
-        const cached = booksStore.books.find((b) => b.id === workId)
-        return cached ? booksStore.coverUrl(cached.cover_i, 'S') : booksStore.coverUrl(null, 'S')
-    }
-
     async function handleRead(id: number) {
         await recStore.markAsRead(id)
     }
 
-    function bookOpenLibraryUrl(bookKey: string) {
-        const workId = bookKey.startsWith('/works/') ? bookKey : `/works/${bookKey}`
-        return `https://openlibrary.org${workId}`
+    function openDetail(book: Book) {
+        booksStore.selectBook(book);
     }
 </script>
 
@@ -100,13 +93,11 @@
                     </div>
 
                     <!-- Book link -->
-                    <a :href="bookOpenLibraryUrl(item.book_key)"
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       class="inline-flex items-center gap-1.5 mt-1.5 text-sm font-medium text-primary hover:underline">
-                        <i class="pi pi-book text-xs" />
-                        {{ item.book_key }}
-                    </a>
+                    <div class="inline-flex items-center gap-1.5 mt-1.5 text-sm font-medium text-primary hover:underline hover:cursor-pointer"
+                         @click="openDetail(item)">
+                        <img :src="booksStore.coverUrl(item.cover_i, 'S')" :alt="item.title">
+                        <span>{{ item.title }}</span>
+                    </div>
 
                     <p v-if="item.message"
                        class="mt-2 text-sm text-surface-600 dark:text-surface-300 italic bg-surface-50 dark:bg-surface-800 rounded px-3 py-2">
@@ -128,4 +119,6 @@
             </div>
         </div>
     </div>
+
+    <BookDetail />
 </template>
