@@ -35,7 +35,7 @@ onMounted(async () => {
     }
     try {
         const [profileRes] = await Promise.all([
-            axios.get(`/api/users/${auth.user.id}/profile`),
+            axios.get(`/api/users/profile`),
             books.fetchShelf(),
         ])
         profile.value = profileRes.data.user
@@ -48,7 +48,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <main class="p-6 max-w-3xl mx-auto flex flex-col gap-6">
+    <main class="p-6 max-w-full flex flex-col gap-6">
 
         <!-- Loading -->
         <div v-if="isLoading" class="flex justify-center py-20">

@@ -92,13 +92,11 @@
                 <template v-if="auth.user">
                     <span class="text-sm text-surface-400">{{ auth.user.username }}</span>
                     <RouterLink to="/profile">
-                        <Button
-                            icon="pi pi-user"
-                            severity="secondary"
-                            text
-                            rounded
-                            aria-label="My Profile"
-                        />
+                        <Button icon="pi pi-user"
+                                severity="secondary"
+                                text
+                                rounded
+                                aria-label="My Profile" />
                     </RouterLink>
                     <Button icon="pi pi-sign-out"
                             severity="secondary"
