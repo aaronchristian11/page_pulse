@@ -25,7 +25,7 @@
     const friendCount = computed(() => friends.followers.length);
 
     const menuItems = [
-      { label: 'Catalogue', icon: 'pi pi-search', command: () => router.push('/') },
+      { label: 'Catalogue', icon: 'pi pi-search', command: () => router.push('/catalogue') },
       { label: 'My Shelf', icon: 'pi pi-book', command: () => router.push('/shelf') },
       { label: 'Group Shelves', icon: 'pi pi-users', command: () => router.push('/groups') },
     ]

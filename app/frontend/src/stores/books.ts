@@ -7,7 +7,7 @@ import router from "@/router";
 import axios from "axios";
 
 export interface Book {
-    id: string;
+    id?: string;
     key: string;
     normalizedKey: string;
     addedBy?: string;
@@ -80,9 +80,7 @@ export const useBooksStore = defineStore('books', () => {
         try {
             const data = await openLibraryApi.getWork(key)
             selectedWorkDetail.value = {
-                description: typeof data.description === 'string'
-                    ? data.description
-                    : data.description?.value ?? null,
+                description: typeof data.description === 'string' ? data.description : data.description?.value ?? null,
                 subjects: data.subjects?.slice(0, 10) ?? [],
                 first_publish_date: data.first_publish_date ?? null,
             }

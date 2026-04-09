@@ -2,7 +2,7 @@
     import { ref, onMounted } from 'vue'
     import { useFollowsStore } from '@/stores/follows'
     import { useAuthStore } from '@/stores/auth'
-    import { useBooksStore } from '@/stores/books'
+    import {Book, useBooksStore} from '@/stores/books'
     import Button from 'primevue/button'
     import InputText from 'primevue/inputtext'
     import Card from 'primevue/card'
@@ -11,6 +11,7 @@
     import TabList from 'primevue/tablist'
     import TabPanel from 'primevue/tabpanel'
     import TabPanels from 'primevue/tabpanels'
+    import BookDetail from "@/components/BookDetail.vue";
     import axios from 'axios'
 
     const followsStore = useFollowsStore()
@@ -52,10 +53,8 @@
         searchQuery.value = ''
     }
 
-    function coverUrl(bookKey: string) {
-        const workId = bookKey.replace('/works/', '')
-        const cached = booksStore.books.find((b) => b.id === workId)
-        return booksStore.coverUrl(cached?.cover_i ?? null, 'S')
+    function openDetail(book: Book) {
+        booksStore.selectBook(book);
     }
 </script>
 
@@ -174,12 +173,11 @@
                              :key="`${rec.book_id}-${rec.recommended_by}`"
                              class="flex items-center gap-3 bg-surface-50 dark:bg-surface-800 rounded-lg px-4 py-3">
                             <div class="flex-1 min-w-0">
-                                <a :href="`https://openlibrary.org/works/${rec.key}`"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="text-sm font-medium text-primary hover:underline truncate block">
-                                    {{ rec.key }}
-                                </a>
+                                <div class="inline-flex items-center gap-1.5 mt-1.5 text-sm font-medium text-primary hover:underline hover:cursor-pointer"
+                                     @click="openDetail(rec)">
+                                    <img :src="booksStore.coverUrl(rec.cover_i, 'S')" :alt="rec.title" />
+                                    <span>{{ rec.title }}</span>
+                                </div>
                                 <p class="text-xs text-surface-400 mt-0.5">
                                     Rated {{ rec.rating }}★ by @{{ rec.recommended_by }}
                                 </p>
@@ -198,4 +196,6 @@
             </TabPanels>
         </Tabs>
     </div>
+
+    <BookDetail />
 </template>

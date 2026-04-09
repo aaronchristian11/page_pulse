@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
+import {toBook} from "@/stores/books";
 
 export interface FollowUser {
     id: number
@@ -30,15 +31,11 @@ export const useFollowsStore = defineStore('follows', () => {
         () => (userId: number) => following.value.some((u) => u.id === userId)
     )
 
-    function authHeaders() {
-        return { 'x-user-id': String(authStore.user?.id ?? '') }
-    }
-
     async function loadFollowing() {
         if (!authStore.user) return
         try {
             isLoading.value = true
-            const res = await axios.get('/api/follows/following', { headers: authHeaders() })
+            const res = await axios.get('/api/follows/following')
             following.value = res.data.following
         } catch (err: any) {
             error.value = err.response?.data?.error ?? 'Failed to load following.'
@@ -51,7 +48,7 @@ export const useFollowsStore = defineStore('follows', () => {
         if (!authStore.user) return
         try {
             isLoading.value = true
-            const res = await axios.get('/api/follows/followers', { headers: authHeaders() })
+            const res = await axios.get('/api/follows/followers')
             followers.value = res.data.followers
         } catch (err: any) {
             error.value = err.response?.data?.error ?? 'Failed to load followers.'
@@ -62,7 +59,7 @@ export const useFollowsStore = defineStore('follows', () => {
 
     async function followUser(userId: number) {
         try {
-            await axios.post(`/api/follows/follow/${userId}`, {}, { headers: authHeaders() })
+            await axios.post(`/api/follows/follow/${userId}`)
             await loadFollowing()
         } catch (err: any) {
             error.value = err.response?.data?.error ?? 'Failed to follow user.'
@@ -71,7 +68,7 @@ export const useFollowsStore = defineStore('follows', () => {
 
     async function unfollowUser(userId: number) {
         try {
-            await axios.delete(`/api/follows/unfollow/${userId}`, { headers: authHeaders() })
+            await axios.delete(`/api/follows/unfollow/${userId}`)
             following.value = following.value.filter((u) => u.id !== userId)
         } catch (err: any) {
             error.value = err.response?.data?.error ?? 'Failed to unfollow user.'
@@ -82,10 +79,8 @@ export const useFollowsStore = defineStore('follows', () => {
         if (!authStore.user) return
         try {
             isLoading.value = true
-            const res = await axios.get('/api/follows/friend-recommendations', {
-                headers: authHeaders(),
-            })
-            friendRecommendations.value = res.data.recommendations
+            const res = await axios.get('/api/follows/friend-recommendations')
+            friendRecommendations.value = res.data.recommendations.map(toBook)
         } catch (err: any) {
             error.value = err.response?.data?.error ?? 'Failed to load recommendations.'
         } finally {
@@ -95,7 +90,7 @@ export const useFollowsStore = defineStore('follows', () => {
 
     async function getFollowedUserShelf(userId: number) {
         try {
-            const res = await axios.get(`/api/follows/${userId}/shelf`, { headers: authHeaders() })
+            const res = await axios.get(`/api/follows/${userId}/shelf`)
             return res.data.books
         } catch (err: any) {
             error.value = err.response?.data?.error ?? 'Failed to load shelf.'
