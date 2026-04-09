@@ -97,6 +97,13 @@ npx knex seed:run --knexfile src/db/knexfile.ts
 npx knex migrate:rollback --knexfile src/db/knexfile.ts
 ```
 
+## Deployment
+
+```shell
+chmod +x deploy.sh
+sudo bash deploy.sh
+```
+
 ## Features
 
 ### General User
