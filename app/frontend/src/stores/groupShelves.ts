@@ -4,12 +4,11 @@ import type { Book } from '@/stores/books'
 import { useAuthStore } from '@/stores/auth'
 import {
     groupShelvesApi,
-    type GroupBookEntry,
     type GroupSummary,
     type GroupMember,
 } from '@/services/groupShelvesApi'
 
-export type { GroupBookEntry, GroupSummary, GroupMember } from '@/services/groupShelvesApi'
+export type { GroupSummary, GroupMember } from '@/services/groupShelvesApi'
 
 export const useGroupShelvesStore = defineStore('groupShelves', () => {
     const auth = useAuthStore()

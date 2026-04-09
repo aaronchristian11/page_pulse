@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Book } from '@/stores/books';
+import { type Book, toBook, normalizeKey } from '@/stores/books';
 
 const BASE = '/api';
 
@@ -12,20 +12,13 @@ export interface GroupSummary {
     bookCount: number;
     currentUserRole: 'Administrator' | 'General' | null;
     members: GroupMember[];
-    books: GroupBookEntry[];
+    books: Book[];
 }
 
 export interface GroupMember {
     id: number;
     username: string;
     role: 'Administrator' | 'General';
-}
-
-export interface GroupBookEntry {
-    id: string;
-    key: string;
-    addedBy: string;
-    addedByUserId: number;
 }
 
 export const groupShelvesApi = {
@@ -43,12 +36,7 @@ export const groupShelvesApi = {
                     username: m.username,
                     role: m.role,
                 })),
-                books: (g.books ?? []).map((b: any) => ({
-                    id: String(b.id),
-                    key: b.key,
-                    addedBy: `${b.first_name} ${b.last_name}`,
-                    addedByUserId: b.user_id,
-                })),
+                books: (g.books ?? []).map(toBook),
                 isJoined: (g.members ?? []).some((m: any) => m.id === currentUserId),
                 currentUserRole: (g.members ?? []).find((m: any) => m.id === currentUserId)?.role ?? null,
                 memberCount: g.members?.length ?? 0,
@@ -119,29 +107,19 @@ export const groupShelvesApi = {
         }
     },
 
-    async addGroupBook(groupId: string, bookId: string): Promise<GroupBookEntry[]> {
+    async addGroupBook(groupId: string, bookId: string): Promise<Book[]> {
         try {
             const { data } = await axios.post(`${BASE}/groups/${groupId}/books`, { book_id: bookId });
-            return (data.books ?? []).map((b: any) => ({
-                id: String(b.id),
-                key: b.key,
-                addedBy: `${b.first_name} ${b.last_name}`,
-                addedByUserId: b.user_id,
-            }));
+            return (data.books ?? []).map(toBook);
         } catch (error: any) {
             throw new Error(error?.response?.data?.error ?? 'Failed to add book.');
         }
     },
 
-    async removeGroupBook(groupId: string, bookId: string): Promise<GroupBookEntry[]> {
+    async removeGroupBook(groupId: string, bookId: string): Promise<Book[]> {
         try {
             const { data } = await axios.delete(`${BASE}/groups/${groupId}/books/${bookId}`);
-            return (data.books ?? []).map((b: any) => ({
-                id: String(b.id),
-                key: b.key,
-                addedBy: `${b.first_name} ${b.last_name}`,
-                addedByUserId: b.user_id,
-            }));
+            return (data.books ?? []).map(toBook);
         } catch (error: any) {
             throw new Error(error?.response?.data?.error ?? 'Failed to remove book.');
         }

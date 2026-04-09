@@ -22,10 +22,6 @@ export const useReviewsStore = defineStore('reviews', () => {
     const isLoading = ref(false)
     const error = ref<string | null>(null)
 
-    function authHeaders() {
-        return { 'x-user-id': String(authStore.user?.id ?? '') }
-    }
-
     function cacheKey(bookKey: string, groupId?: string | null) {
         return groupId ? `${bookKey}:group_${groupId}` : bookKey
     }
@@ -37,8 +33,7 @@ export const useReviewsStore = defineStore('reviews', () => {
             const params: Record<string, any> = {}
             if (groupId) params.group_id = groupId
             const res = await axios.get(`/api/reviews/book/${bookKey}`, {
-                params,
-                headers: authHeaders(),
+                params
             })
             reviewsByBook.value[key] = res.data.reviews
         } catch (err: any) {
@@ -62,9 +57,7 @@ export const useReviewsStore = defineStore('reviews', () => {
                     rating,
                     review_text: reviewText || null,
                     group_id: groupId ?? null,
-                },
-                { headers: authHeaders() }
-            )
+                })
             // Reload to get fresh data with author info
             await loadReviews(bookKey, groupId)
         } catch (err: any) {
@@ -75,7 +68,7 @@ export const useReviewsStore = defineStore('reviews', () => {
 
     async function deleteReview(reviewId: number, bookKey: string, groupId?: string | null) {
         try {
-            await axios.delete(`/api/reviews/${reviewId}`, { headers: authHeaders() })
+            await axios.delete(`/api/reviews/${reviewId}`)
             const key = cacheKey(bookKey, groupId)
             if (reviewsByBook.value[key]) {
                 reviewsByBook.value[key] = reviewsByBook.value[key].filter(

@@ -104,7 +104,7 @@ export const openLibraryApi = {
      */
     covers: {
         byId(coverId: number, size: 'S' | 'M' | 'L' = 'M'): string {
-            return `${COVERS_URL}/B/${coverId}-${size}.jpg`
+            return `${COVERS_URL}/b/${coverId}-${size}.jpg`
         },
         byIsbn(isbn: string, size: 'S' | 'M' | 'L' = 'M'): string {
             return `${COVERS_URL}/isbn/${isbn}-${size}.jpg`

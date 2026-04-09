@@ -5,7 +5,7 @@ import groupRoutes from './group.route.ts';
 import openLibraryRoutes from './open_library.route.ts';
 import usersRouter from './users.route.ts';
 import followsRouter from './follow.route.ts';
-import reviewsRouter from './review.router.ts';
+import reviewsRouter from './review.route.ts';
 import recommendationsRouter from './recommendation.route.ts';
 import { isAuthenticated, hasPermission } from '../middlewares/auth.middleware.ts';
 

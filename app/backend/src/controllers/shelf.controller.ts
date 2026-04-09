@@ -1,7 +1,8 @@
 import type { Request, Response } from 'express';
-import {openLibraryApi} from '../api/open_library.api.ts';
+import { openLibraryApi } from '../api/open_library.api.ts';
+import { bookCache } from '../cache/book.cache.ts';
 import knex from '../db/database.ts';
-import {AppError} from "../exceptions/AppError.ts";
+import { AppError } from '../exceptions/AppError.ts';
 
 export const getShelfBooks = async (req: Request, res: Response) => {
     const { userId } = req.params;
@@ -10,14 +11,18 @@ export const getShelfBooks = async (req: Request, res: Response) => {
         const user_books = await knex('user_books')
             .join('books', 'user_books.book_id', 'books.id')
             .where('user_books.user_id', userId)
-            .select('books.key', 'user_books.rating');
+            .select('books.id' , 'books.key', 'user_books.rating');
+
         const books = await Promise.all(
-        user_books.map(async (user_book: any) => {
-            const work = await openLibraryApi.getWork(user_book.key);
-            return { ...work, rating: user_book.rating ?? null };
-        })
-    );
-    res.json({ books });
+            user_books.map(async (user_book: any) => {
+                const work = await bookCache.getOrFetch(user_book.key, () =>
+                    openLibraryApi.getWork(user_book.key)
+                );
+                return { ...work, rating: user_book.rating ?? null };
+            })
+        );
+
+        res.json({ books });
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to get books.' });
     }
@@ -39,6 +44,13 @@ export const addBookToShelf = async (req: Request, res: Response) => {
 
             await trx('user_books').insert({ user_id: userId, book_id: book.id });
         });
+
+        // Pre-warm cache for this book key if not already cached
+        if (!bookCache.has(`work:${book_key}`)) {
+            openLibraryApi.getWork(book_key)
+                .then((data) => bookCache.set(`work:${book_key}`, data))
+                .catch(() => { /* non-fatal */ });
+        }
 
         res.json({ message: 'The book has been added to the shelf.' });
     } catch (err: any) {
@@ -69,7 +81,7 @@ export const removeBookFromShelf = async (req: Request, res: Response) => {
 
         res.json({ message: 'The book has been removed from the shelf.' });
     } catch (err: any) {
-        res.status(err.statusCode || 500).json({ error: err.message || 'Failed to add book to shelf.' });
+        res.status(err.statusCode || 500).json({ error: err.message || 'Failed to remove book from shelf.' });
     }
 };
 

@@ -7,27 +7,32 @@ import router from "@/router";
 import axios from "axios";
 
 export interface Book {
-    id: string
-    isbn: string | null
-    title: string
-    description: string | null
-    author: string | null
-    cover_i: number | null
-    first_publish_year: number | null
-    subject: string[]
-    rating?: number | null
+    id: string;
+    key: string;
+    normalizedKey: string;
+    addedBy?: string;
+    addedByUserId?: number;
+    title?: string;
+    author?: string;
+    cover_i?: number;
+    first_publish_year?: number;
+    [key: string]: any;
 }
 
-function toBook(doc: BookSearchResult): Book {
+export const normalizeKey = (key: string) => key.replace('/works/', '')
+
+export function toBook(b: BookSearchResult): Book {
     return {
-        id: doc.key.replace('/works/', ''),
-        isbn: doc.isbn?.[0] ?? null,
-        title: doc.title ?? 'Unknown Title',
-        description: null,
-        author: doc.author_name?.[0] ?? null,
-        cover_i: doc.cover_i ?? null,
-        first_publish_year: doc.first_publish_year ?? null,
-        subject: doc.subject?.slice(0, 5) ?? [],
+        id: String(b.id),
+        key: b.key,
+        normalizedKey: normalizeKey(b.key),
+        addedBy: `${b.first_name} ${b.last_name}` ?? 'N/A',
+        addedByUserId: b.user_id,
+        title: b.title,
+        author: b.author ?? 'N/A',
+        cover_i: b.cover_i,
+        first_publish_year: b.first_publish_year ?? 'N/A',
+        rating: b.rating
     }
 }
 
@@ -69,11 +74,11 @@ export const useBooksStore = defineStore('books', () => {
         }).finally(() => isLoading.value = false);
     }
 
-    async function fetchWorkDetail(bookId: string) {
+    async function fetchWorkDetail(key: string) {
         isLoadingDetail.value = true
         selectedWorkDetail.value = null
         try {
-            const data = await openLibraryApi.getWork(bookId)
+            const data = await openLibraryApi.getWork(key)
             selectedWorkDetail.value = {
                 description: typeof data.description === 'string'
                     ? data.description
@@ -90,7 +95,7 @@ export const useBooksStore = defineStore('books', () => {
 
     function selectBook(book: Book) {
         selectedBook.value = book
-        fetchWorkDetail(book.id)
+        fetchWorkDetail(book.normalizedKey)
     }
 
     function clearSelectedBook() {
@@ -104,7 +109,7 @@ export const useBooksStore = defineStore('books', () => {
         } else {
             if (shelf.value && !shelf.value.find(b => b.id === book.id)) {
                 await axios.post(`/api/shelves/${user.value.id}/book`, {
-                    book_key: book.id
+                    book_key: book.normalizedKey
                 }).then(() => {
                     shelf.value.push(book);
                 }).catch(err => {
@@ -120,7 +125,7 @@ export const useBooksStore = defineStore('books', () => {
         } else {
             await axios.delete(`/api/shelves/${user.value.id}/book`, {
                 data: {
-                    book_key: shelf.value.find(b => b.id === bookId)?.id
+                    book_key: shelf.value.find(b => b.id === bookId)?.normalizedKey
                 }
             }).then(() => {
                 shelf.value = shelf.value.filter(b => b.id !== bookId);
@@ -150,17 +155,15 @@ export const useBooksStore = defineStore('books', () => {
         return coverId ? openLibraryApi.covers.byId(coverId, size) : openLibraryApi.covers.placeholder()
     }
 
-    async function rateBook(bookId: string, rating: number) {
+    async function rateBook(bookKey: string, rating: number) {
         if (!user.value) return;
-            const book = shelf.value?.find(b => b.id === bookId);
-        if (!book) return;
 
         await axios.patch(`/api/shelves/${user.value.id}/book/rating`, {
-            book_key: bookId,
+            book_key: bookKey,
             rating,
         }).then(() => {
             if (shelf.value) {
-                const target = shelf.value.find(b => b.id === bookId);
+                const target = shelf.value.find(b => b.normalizedKey === bookKey);
                 if (target) target.rating = rating;
             }
         }).catch(err => {

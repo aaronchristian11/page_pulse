@@ -24,12 +24,10 @@
 </script>
 
 <template>
-    <Drawer
-        v-model:visible="visible"
-        position="right"
-        class="!w-full md:!w-[460px]"
-        :pt="{ header: { class: 'pb-0' } }"
-    >
+    <Drawer v-model:visible="visible"
+            position="right"
+            class="!w-full md:!w-[460px]"
+            :pt="{ header: { class: 'pb-0' } }">
         <template #header>
             <span class="font-bold text-lg">Book Details</span>
         </template>
@@ -123,7 +121,7 @@
             <!-- Reviews -->
             <div>
                 <h3 class="font-semibold text-color mb-3">Reviews</h3>
-                <ReviewPanel :bookKey="book.id" />
+                <ReviewPanel :bookKey="book.normalizedKey" />
             </div>
         </div>
     </Drawer>

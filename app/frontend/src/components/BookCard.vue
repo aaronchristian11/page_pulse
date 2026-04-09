@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type {Book} from '@/stores/books'
-import {useBooksStore} from '@/stores/books'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
+    import type {Book} from '@/stores/books'
+    import {useBooksStore} from '@/stores/books'
+    import Card from 'primevue/card'
+    import Button from 'primevue/button'
 
-const props = defineProps<{ book: Book }>()
-const emit = defineEmits<{ select: [book: Book] }>()
-const store = useBooksStore()
+    const props = defineProps<{ book: Book }>()
+    const emit = defineEmits<{ select: [book: Book] }>()
+    const store = useBooksStore()
 </script>
 
 <template>

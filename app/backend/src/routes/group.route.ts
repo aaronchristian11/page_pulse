@@ -8,7 +8,7 @@ router.get('/', getGroups);
 router.get('/:id', getGroup);
 router.post('/create', createGroup);
 router.put('/:id', updateGroup);
-router.delete('/:id', isGroupAdmin, deleteGroup);
+router.delete('/:group_id', isGroupAdmin, deleteGroup);
 router.post('/:group_id/join', joinGroup);
 router.get('/:group_id/members', getGroupMembers);
 router.put('/:group_id/members/:user_id', isGroupAdmin, updateMember);

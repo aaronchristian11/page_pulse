@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
 import knex from '../db/database.ts';
-import type { User } from "../types/express.d.ts";
+import { bookCache } from '../cache/book.cache.ts';
+import { openLibraryApi } from '../api/open_library.api.ts';
+import type { User } from '../types/express.d.ts';
 
 const getGroupMembersQuery = (group_id: string | number) =>
     knex('user_groups')
@@ -18,13 +20,28 @@ const getGroupBooksQuery = (group_id: string | number) =>
         .whereNull('group_books.deleted_at')
         .select('group_books.id', 'books.key', 'users.id as user_id', 'users.first_name', 'users.last_name');
 
+/**
+ * Enrich raw group_books rows with full book details from cache (or API).
+ */
+const enrichGroupBooks = async (rawBooks: any[]) => {
+    return Promise.all(
+        rawBooks.map(async (entry) => {
+            const work = await bookCache.getOrFetch(entry.key, () =>
+                openLibraryApi.getWork(entry.key)
+            );
+            return { ...entry, ...work };
+        })
+    );
+};
+
 export const getGroups = async (req: Request, res: Response) => {
     try {
         const groups = await knex('groups').whereNull('deleted_at');
 
         const enriched = await Promise.all(groups.map(async (group) => {
             const members = await getGroupMembersQuery(group.id);
-            const books = await getGroupBooksQuery(group.id);
+            const rawBooks = await getGroupBooksQuery(group.id);
+            const books = await enrichGroupBooks(rawBooks);
             return { ...group, members, books };
         }));
 
@@ -45,7 +62,8 @@ export const getGroup = async (req: Request, res: Response) => {
         }
 
         const members = await getGroupMembersQuery(id);
-        const books = await getGroupBooksQuery(id);
+        const rawBooks = await getGroupBooksQuery(id);
+        const books = await enrichGroupBooks(rawBooks);
 
         res.json({ group, members, books });
     } catch (err: any) {
@@ -64,7 +82,7 @@ export const createGroup = async (req: Request, res: Response) => {
         await knex('user_groups').insert({
             group_id: id,
             user_id: user.id,
-            role_permission_id: role_permission.id
+            role_permission_id: role_permission.id,
         });
 
         res.status(201).json({ message: 'Group created.', id });
@@ -133,9 +151,11 @@ export const joinGroup = async (req: Request, res: Response) => {
         await knex('user_groups').insert({
             group_id,
             user_id: user.id,
-            role_permission_id: role_permission.id
+            role_permission_id: role_permission.id,
         });
-        const books = await getGroupBooksQuery(group_id);
+
+        const rawBooks = await getGroupBooksQuery(group_id);
+        const books = await enrichGroupBooks(rawBooks);
         const members = await getGroupMembersQuery(group_id);
 
         res.json({ message: 'Joined group.', books, members });
@@ -199,7 +219,8 @@ export const getGroupBooks = async (req: Request, res: Response) => {
     const { group_id } = req.params;
 
     try {
-        const books = await getGroupBooksQuery(group_id);
+        const rawBooks = await getGroupBooksQuery(group_id);
+        const books = await enrichGroupBooks(rawBooks);
         res.json({ books });
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to fetch group books.' });
@@ -230,7 +251,15 @@ export const addGroupBook = async (req: Request, res: Response) => {
 
         await knex('group_books').insert({ group_id, book_id: book.id, user_id: user.id });
 
-        const books = await getGroupBooksQuery(group_id);
+        // Pre-warm cache
+        if (!bookCache.has(`work:${book_id}`)) {
+            openLibraryApi.getWork(book_id)
+                .then((data) => bookCache.set(`work:${book_id}`, data))
+                .catch(() => { /* non-fatal */ });
+        }
+
+        const rawBooks = await getGroupBooksQuery(group_id);
+        const books = await enrichGroupBooks(rawBooks);
         res.status(201).json({ message: 'Book added to group.', books });
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to add book to group.' });
@@ -260,7 +289,8 @@ export const updateGroupBook = async (req: Request, res: Response) => {
 
         await knex('group_books').where({ group_id, id: book_id }).update(updates);
 
-        const books = await getGroupBooksQuery(group_id);
+        const rawBooks = await getGroupBooksQuery(group_id);
+        const books = await enrichGroupBooks(rawBooks);
         res.json({ message: 'Book updated.', books });
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to update book.' });
@@ -291,7 +321,8 @@ export const deleteGroupBook = async (req: Request, res: Response) => {
             .where({ group_id, id: book_id })
             .update({ deleted_at: knex.fn.now() });
 
-        const books = await getGroupBooksQuery(group_id);
+        const rawBooks = await getGroupBooksQuery(group_id);
+        const books = await enrichGroupBooks(rawBooks);
         res.json({ message: 'Book removed from group.', books });
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to remove book from group.' });
