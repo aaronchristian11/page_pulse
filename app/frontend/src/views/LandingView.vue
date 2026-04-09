@@ -92,7 +92,7 @@ const router = useRouter()
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: var(--p-surface-50, #f8fafc);
+    background: #1a1a1d;
 }
 
 /* ── Hero ───────────────────────────────────────────────── */
@@ -204,7 +204,7 @@ const router = useRouter()
     left: 0;
     width: 100%;
     height: 60px;
-    color: var(--p-surface-50, #f8fafc);
+    color: #1a1a1d;
 }
 
 .hero__wave svg {
@@ -216,6 +216,7 @@ const router = useRouter()
 .features {
     flex: 1;
     padding: 3rem 1.5rem 2rem;
+    background: #1a1a1d;
 }
 
 .features__grid {
