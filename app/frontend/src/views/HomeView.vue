@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useBooksStore } from '@/stores/books';
+import {toBook, useBooksStore} from '@/stores/books';
 import { useGroupShelvesStore } from '@/stores/groupShelves';
 import Search from '@/components/Search.vue';
 import BookCard from '@/components/BookCard.vue';
@@ -203,13 +203,11 @@ onMounted(() => {
         <!-- Book Grid -->
         <div v-else
              class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 items-stretch">
-            <BookCard
-                v-for="book in filteredBooks"
-                :key="book.id"
-                :book="book"
-                class="h-full"
-                @select="openDetail"
-            />
+            <BookCard v-for="book in filteredBooks"
+                      :key="book.id"
+                      :book="book"
+                      class="h-full"
+                      @select="openDetail" />
         </div>
 
         <!-- Pagination -->
@@ -256,9 +254,9 @@ onMounted(() => {
     height: 2.5rem;
     width: 100%;
     border-radius: 9999px;
-    border: 1px solid var(--p-surface-300, #cbd5e1);
-    background: var(--p-surface-0, #ffffff);
-    color: var(--p-surface-600, #475569);
+    border: 1px solid var(--p-text-color);
+    background: var(--color-background);
+    color: var(--p-text-color);
     font-size: 0.8rem;
     font-weight: 500;
     white-space: nowrap;
@@ -268,14 +266,14 @@ onMounted(() => {
 
 .genre-btn:hover {
     border-color: var(--p-primary-500, #6366f1);
-    color: var(--p-primary-500, #6366f1);
-    background: var(--p-primary-50, #eef2ff);
+    color: var(--p-button-primary-hover-color);
+    background: var(--p-primary-500, #eef2ff);
 }
 
 .genre-btn--active {
     background: var(--p-primary-500, #6366f1);
     border-color: var(--p-primary-500, #6366f1);
-    color: #ffffff;
+    color: var(--p-button-primary-hover-color);
 }
 
 .genre-btn--active:hover {
@@ -305,8 +303,8 @@ onMounted(() => {
     align-items: center;
     gap: 0.75rem;
     padding: 0.65rem 1rem;
-    background: var(--p-surface-50, #f8fafc);
-    border: 1px solid var(--p-surface-200, #e2e8f0);
+    background: var(--color-background);
+    border: 1px solid var(--p-text-color, #e2e8f0);
     border-radius: 0.75rem;
 }
 
@@ -323,7 +321,7 @@ onMounted(() => {
     gap: 0.3rem;
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--p-surface-500, #64748b);
+    color: var(--p-text-color);
     white-space: nowrap;
 }
 
@@ -336,7 +334,7 @@ onMounted(() => {
 .filter-bar__divider {
     width: 1px;
     height: 1.5rem;
-    background: var(--p-surface-200, #e2e8f0);
+    background: var(--p-text-color);
     flex-shrink: 0;
 }
 
@@ -368,21 +366,22 @@ onMounted(() => {
     border-radius: 9999px;
     font-size: 0.78rem;
     font-weight: 500;
-    border: 1px solid var(--p-surface-300, #cbd5e1);
-    background: var(--p-surface-0, #ffffff);
-    color: var(--p-surface-600, #475569);
+    border: 1px solid var(--p-text-color);
+    background: var(--color-background);
+    color: var(--p-text-color);
     cursor: pointer;
     transition: all 0.15s ease;
     white-space: nowrap;
 }
 .filter-pill:hover {
     border-color: var(--p-primary-400, #818cf8);
-    color: var(--p-primary-500, #6366f1);
+    color: var(--p-button-primary-hover-color);
+    background: var(--p-primary-500, #eef2ff);
 }
 .filter-pill--active {
     background: var(--p-primary-500, #6366f1);
     border-color: var(--p-primary-500, #6366f1);
-    color: #ffffff;
+    color: var(--p-button-primary-hover-color);
 }
 .filter-pill--active:hover {
     background: var(--p-primary-600, #4f46e5);

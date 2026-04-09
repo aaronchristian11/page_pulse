@@ -78,7 +78,7 @@ const openLibraryUrl = computed(() => {
         </div>
 
         <p v-if="isbn" class="text-xs text-surface-400">
-            ISBN: <span class="font-mono">{{ isbn }}</span>
+            ISBN: <span class="font-mono">{{ Array.isArray(isbn) ? isbn[0] : isbn }}</span>
         </p>
         <p v-else class="text-xs text-surface-400 italic">
             No ISBN available — showing search results

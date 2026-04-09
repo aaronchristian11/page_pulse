@@ -48,8 +48,6 @@
             await store.setReadingStatus(book.value.normalizedKey, next)
         }
     }
-
-    console.log(book, visible);
 </script>
 
 <template>
@@ -88,12 +86,12 @@
 
             <!-- Meta row -->
             <div class="flex justify-center gap-6 text-sm text-surface-400">
-        <span v-if="book.first_publish_year">
-          <i class="pi pi-calendar mr-1"/>{{ book.first_publish_year }}
-        </span>
+                <span v-if="book.first_publish_year">
+                  <i class="pi pi-calendar mr-1"/>{{ book.first_publish_year }}
+                </span>
                 <span v-if="book.isbn">
-          <i class="pi pi-barcode mr-1"/>{{ book.isbn }}
-        </span>
+                  <i class="pi pi-barcode mr-1"/>{{ Array.isArray(book.isbn) ? book.isbn[0] : book.isbn }}
+                </span>
             </div>
 
             <Divider/>
@@ -150,14 +148,12 @@
                 <Divider/>
                 <h3 class="font-semibold text-color mb-3">Reading Status</h3>
                 <div class="status-grid">
-                    <button
-                        v-for="opt in statusOptions"
-                        :key="opt.value"
-                        class="status-btn"
-                        :class="{ 'status-btn--active': currentStatus === opt.value }"
-                        :style="currentStatus === opt.value ? `--status-color: #${opt.color}` : ''"
-                        @click="handleStatus(opt.value)"
-                    >
+                    <button v-for="opt in statusOptions"
+                            :key="opt.value"
+                            class="status-btn"
+                            :class="{ 'status-btn--active': currentStatus === opt.value }"
+                            :style="currentStatus === opt.value ? `--status-color: #${opt.color}` : ''"
+                            @click="handleStatus(opt.value)">
                         <i :class="opt.icon" class="text-sm"/>
                         <span>{{ opt.label }}</span>
                     </button>

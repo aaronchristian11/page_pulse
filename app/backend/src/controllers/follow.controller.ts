@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
 import type {User} from "../types/express.d.ts";
 import knex from "../db/database";
+import {bookCache} from "../cache/book.cache";
+import {openLibraryApi} from "../api/open_library.api";
 
 export const followUser = async (req: Request, res: Response) => {
     const me = req.user as User;
@@ -125,7 +127,7 @@ export const getFriendRecommendations = async (req: Request, res: Response) => {
             .where('user_books.rating', '>=', 4)
             .select(
                 'books.key',
-                'books.id as book_id',
+                'books.id',
                 'user_books.rating',
                 'users.username as recommended_by'
             )
@@ -136,7 +138,16 @@ export const getFriendRecommendations = async (req: Request, res: Response) => {
             query.whereNotIn('user_books.book_id', myBookIds);
         }
 
-        const recommendations = await query;
+        const rows = await query;
+
+        const recommendations = await Promise.all(
+            rows.map(async (entry) => {
+                const work = await bookCache.getOrFetch(entry.key, () =>
+                    openLibraryApi.getWork(entry.key)
+                );
+                return { ...entry, ...work };
+            })
+        );
 
         res.json({ recommendations });
     } catch (err: any) {
