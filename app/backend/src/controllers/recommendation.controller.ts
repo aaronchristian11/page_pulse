@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
-import type {User} from "../types/express.d.ts";
+import type { User } from "../types/express.d.ts";
 import knex from "../db/database";
-import {bookCache} from "../cache/book.cache";
-import {openLibraryApi} from "../api/open_library.api";
+import { bookCache } from "../cache/book.cache";
+import { openLibraryApi } from "../api/open_library.api";
 
 export const sendRecommendation = async (req: Request, res: Response) => {
     const me = req.user as User;
@@ -14,12 +14,10 @@ export const sendRecommendation = async (req: Request, res: Response) => {
     }
 
     try {
-        // Ensure book exists in books table
         await knex('books').insert({ key: book_key }).onConflict('key').ignore();
         const book = await knex('books').where({ key: book_key }).first();
 
         if (recipient_id) {
-            // Direct recommendation to a friend
             if (String(recipient_id) === String(me.id)) {
                 return res.status(400).json({ error: 'You cannot recommend a book to yourself.' });
             }
@@ -39,7 +37,6 @@ export const sendRecommendation = async (req: Request, res: Response) => {
         }
 
         if (group_id) {
-            // Group recommendation — send one notification per member (except sender)
             const membership = await knex('user_groups')
                 .where({ group_id, user_id: me.id })
                 .first();
@@ -74,7 +71,8 @@ export const getInbox = async (req: Request, res: Response) => {
     const me = req.user as User;
 
     try {
-        const rawInbox = await knex('recommendations')
+        // ── Recommendations ───────────────────────────────────────────────────
+        const rawRecs = await knex('recommendations')
             .join('users as sender', 'recommendations.sender_id', 'sender.id')
             .join('books', 'recommendations.book_id', 'books.id')
             .where('recommendations.recipient_id', me.id)
@@ -91,17 +89,40 @@ export const getInbox = async (req: Request, res: Response) => {
             )
             .orderBy('recommendations.created_at', 'desc');
 
-        const inbox = await Promise.all(
-            rawInbox.map(async (item: any) => {
+        const recommendations = await Promise.all(
+            rawRecs.map(async (item: any) => {
                 const work = await bookCache.getOrFetch(item.key, () =>
                     openLibraryApi.getWork(item.key)
                 );
-
-                return {
-                    ...item,
-                    ...work
-                };
+                return { ...item, ...work, type: 'recommendation' };
             })
+        );
+
+        // ── Follow notifications ───────────────────────────────────────────────
+        const rawFollows = await knex('notifications')
+            .join('users as actor', 'notifications.actor_id', 'actor.id')
+            .where('notifications.recipient_id', me.id)
+            .where('notifications.type', 'follow')
+            .select(
+                'notifications.id',
+                'notifications.is_read',
+                'notifications.created_at',
+                'actor.username as sender_username',
+                'actor.first_name as sender_first_name',
+                'actor.last_name as sender_last_name',
+            )
+            .orderBy('notifications.created_at', 'desc');
+
+        const follows = rawFollows.map((item: any) => ({
+            ...item,
+            type: 'follow',
+            message: null,
+            group_id: null,
+        }));
+
+        // ── Merge and sort by date descending ─────────────────────────────────
+        const inbox = [...recommendations, ...follows].sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
 
         res.json({ inbox });
@@ -113,13 +134,22 @@ export const getInbox = async (req: Request, res: Response) => {
 export const markAsRead = async (req: Request, res: Response) => {
     const me = req.user as User;
     const { id } = req.params;
+    const { type } = req.query;
 
     try {
-        const updated = await knex('recommendations')
-            .where({ id, recipient_id: me.id })
-            .update({ is_read: true });
+        let updated: number;
 
-        if (!updated) return res.status(404).json({ error: 'Recommendation not found.' });
+        if (type === 'follow') {
+            updated = await knex('notifications')
+                .where({ id, recipient_id: me.id })
+                .update({ is_read: true });
+        } else {
+            updated = await knex('recommendations')
+                .where({ id, recipient_id: me.id })
+                .update({ is_read: true });
+        }
+
+        if (!updated) return res.status(404).json({ error: 'Notification not found.' });
 
         res.json({ message: 'Marked as read.' });
     } catch (err: any) {
@@ -131,12 +161,19 @@ export const getUnreadCount = async (req: Request, res: Response) => {
     const me = req.user as User;
 
     try {
-        const result = await knex('recommendations')
-            .where({ recipient_id: me.id, is_read: false })
-            .count('id as count')
-            .first();
+        const [recResult, notifResult] = await Promise.all([
+            knex('recommendations')
+                .where({ recipient_id: me.id, is_read: false })
+                .count('id as count')
+                .first(),
+            knex('notifications')
+                .where({ recipient_id: me.id, is_read: false })
+                .count('id as count')
+                .first(),
+        ]);
 
-        res.json({ unread: Number(result?.count ?? 0) });
+        const unread = Number(recResult?.count ?? 0) + Number(notifResult?.count ?? 0);
+        res.json({ unread });
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to fetch unread count.' });
     }

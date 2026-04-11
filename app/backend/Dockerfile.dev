@@ -12,6 +12,11 @@ COPY package*.json ./
 # install depencies
 RUN npm install
 
+RUN mkdir -p /app/data && chown -R node:node /app/data
+
+USER node
+
+
 EXPOSE 3000
 
 CMD sh -c "npx tsx ./node_modules/.bin/knex --knexfile src/db/knexfile.ts migrate:latest && npx tsx watch --clear-screen=false src/index.ts"

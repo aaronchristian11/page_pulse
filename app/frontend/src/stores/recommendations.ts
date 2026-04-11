@@ -31,7 +31,9 @@ export const useRecommendationsStore = defineStore('recommendations', () => {
         try {
             isLoading.value = true
             const res = await axios.get('/api/recommendations/inbox')
-            inbox.value = res.data.inbox.map(toBook);
+            inbox.value = res.data.inbox.map((item: any) =>
+                item.type === 'recommendation' ? { ...item, ...toBook(item) } : item
+            )
         } catch (err: any) {
             error.value = err.response?.data?.error ?? 'Failed to load inbox.'
         } finally {
@@ -49,9 +51,9 @@ export const useRecommendationsStore = defineStore('recommendations', () => {
         }
     }
 
-    async function markAsRead(id: number) {
+    async function markAsRead(id: number, type: string = 'recommendation') {
         try {
-            await axios.patch(`/api/recommendations/${id}/read`)
+            await axios.patch(`/api/recommendations/${id}/read?type=${type}`)
             const item = inbox.value.find((i) => i.id === id)
             if (item) {
                 item.is_read = true

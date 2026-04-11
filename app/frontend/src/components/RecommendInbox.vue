@@ -1,37 +1,37 @@
 <script setup lang="ts">
-    import { onMounted } from 'vue'
-    import { useRecommendationsStore } from '@/stores/recommendations'
-    import { useAuthStore } from '@/stores/auth'
-    import {type Book, useBooksStore} from '@/stores/books'
-    import Button from 'primevue/button'
-    import Badge from 'primevue/badge'
-    import BookDetail from "@/components/BookDetail.vue";
+import { onMounted } from 'vue'
+import { useRecommendationsStore } from '@/stores/recommendations'
+import { useAuthStore } from '@/stores/auth'
+import { type Book, useBooksStore } from '@/stores/books'
+import Button from 'primevue/button'
+import Badge from 'primevue/badge'
+import BookDetail from "@/components/BookDetail.vue";
 
-    const recStore = useRecommendationsStore()
-    const authStore = useAuthStore()
-    const booksStore = useBooksStore()
+const recStore = useRecommendationsStore()
+const authStore = useAuthStore()
+const booksStore = useBooksStore()
 
-    onMounted(async () => {
-        if (authStore.user) {
-            await recStore.loadInbox()
-        }
+onMounted(async () => {
+    if (authStore.user) {
+        await recStore.loadInbox()
+    }
+})
+
+function formatDate(dateStr: string) {
+    return new Date(dateStr).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
     })
+}
 
-    function formatDate(dateStr: string) {
-        return new Date(dateStr).toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        })
-    }
+async function handleRead(id: number, type: string) {
+    await recStore.markAsRead(id, type)
+}
 
-    async function handleRead(id: number) {
-        await recStore.markAsRead(id)
-    }
-
-    function openDetail(book: Book) {
-        booksStore.selectBook(book);
-    }
+function openDetail(book: Book) {
+    booksStore.selectBook(book)
+}
 </script>
 
 <template>
@@ -45,7 +45,7 @@
                    severity="danger" />
         </div>
 
-        <p class="text-sm text-surface-400 -mt-4">Book recommendations from friends and groups</p>
+        <p class="text-sm text-surface-400 -mt-4">Recommendations and activity from friends and groups</p>
 
         <!-- Loading -->
         <div v-if="recStore.isLoading" class="flex justify-center py-12">
@@ -65,13 +65,14 @@
         <!-- Inbox items -->
         <div v-else class="flex flex-col gap-3">
             <div v-for="item in recStore.inbox"
-                 :key="item.id"
+                 :key="`${item.type}-${item.id}`"
                  :class="[
                     'rounded-xl border p-4 flex gap-4 transition-colors',
                     item.is_read
                         ? 'border-surface-100 dark:border-surface-700 bg-transparent'
                         : 'border-primary/30 bg-primary/5 dark:bg-primary/10',
                 ]">
+
                 <!-- Unread dot -->
                 <div class="flex-shrink-0 mt-1.5">
                     <span v-if="!item.is_read"
@@ -79,13 +80,28 @@
                     <span v-else class="block w-2.5 h-2.5" />
                 </div>
 
-                <!-- Content -->
-                <div class="flex-1 min-w-0">
+                <!-- ── Follow notification ── -->
+                <div v-if="item.type === 'follow'" class="flex-1 min-w-0">
                     <div class="flex items-start justify-between gap-2 flex-wrap">
                         <p class="text-sm font-semibold text-color">
+                            <i class="pi pi-user-plus text-primary mr-1" />
+                            <span class="text-primary">@{{ item.sender_username }}</span>
+                            started following you
+                        </p>
+                        <span class="text-xs text-surface-400 flex-shrink-0">
+                            {{ formatDate(item.created_at) }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- ── Recommendation notification ── -->
+                <div v-else class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-2 flex-wrap">
+                        <p class="text-sm font-semibold text-color">
+                            <i class="pi pi-book text-primary mr-1" />
                             <span class="text-primary">@{{ item.sender_username }}</span>
                             recommended a book
-                            <span v-if="item.group_id" class="text-surface-400">(group)</span>
+                            <span v-if="item.group_id" class="text-surface-400 font-normal">(group)</span>
                         </p>
                         <span class="text-xs text-surface-400 flex-shrink-0">
                             {{ formatDate(item.created_at) }}
@@ -95,7 +111,10 @@
                     <!-- Book link -->
                     <div class="inline-flex items-center gap-1.5 mt-1.5 text-sm font-medium text-primary hover:underline hover:cursor-pointer"
                          @click="openDetail(item)">
-                        <img :src="booksStore.coverUrl(item.cover_i, 'S')" :alt="item.title">
+                        <img v-if="item.cover_i"
+                             :src="booksStore.coverUrl(item.cover_i, 'S')"
+                             :alt="item.title"
+                             class="h-8 w-6 object-cover rounded" />
                         <span>{{ item.title }}</span>
                     </div>
 
@@ -114,7 +133,7 @@
                             rounded
                             severity="secondary"
                             aria-label="Mark as read"
-                            @click="handleRead(item.id)" />
+                            @click="handleRead(item.id, item.type)" />
                 </div>
             </div>
         </div>

@@ -137,16 +137,18 @@ export const useBooksStore = defineStore('books', () => {
         if (!user.value) {
             router.push('login');
         } else {
+            isLoading.value = true;
             await axios.get(`/api/shelves/${user.value.id}/books`)
                 .then(res => shelf.value = res.data.books.map(toBook))
                 .catch(err => {
                     error.value = err.response?.data?.error || 'Failed to fetch shelf.';
                 });
+            isLoading.value = false;
         }
     }
 
-    function isOnShelf(bookId: string): boolean {
-        return shelf.value && shelf.value.some(b => b.id === bookId)
+    function isOnShelf(bookKey: string): boolean {
+        return shelf.value && shelf.value.some(b => b.normalizedKey === bookKey)
     }
 
     function coverUrl(coverId: number | null, size: 'S' | 'M' | 'L' = 'M'): string {

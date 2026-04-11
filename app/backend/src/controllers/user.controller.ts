@@ -32,22 +32,33 @@ export const userProfile = async (req: Request, res: Response) => {
 
         if (!userDetails) return res.status(404).json({ error: 'User not found.' });
 
-        const shelfCount = await knex('user_books')
-            .where({ user_id: user.id })
-            .count('id as count')
-            .first();
-
-        const ratedCount = await knex('user_books')
-            .where({ user_id: user.id })
-            .whereNotNull('rating')
-            .count('id as count')
-            .first();
+        const [shelfCount, ratedCount, followerCount, followingCount] = await Promise.all([
+            knex('user_books')
+                .where({ user_id: user.id })
+                .count('id as count')
+                .first(),
+            knex('user_books')
+                .where({ user_id: user.id })
+                .whereNotNull('rating')
+                .count('id as count')
+                .first(),
+            knex('follows')
+                .where({ following_id: user.id })
+                .count('follower_id as count')
+                .first(),
+            knex('follows')
+                .where({ follower_id: user.id })
+                .count('following_id as count')
+                .first(),
+        ]);
 
         res.json({
             user: {
-                ...user,
-                shelf_count: Number(shelfCount?.count ?? 0),
-                rated_count: Number(ratedCount?.count ?? 0),
+                ...userDetails,
+                shelf_count:    Number(shelfCount?.count    ?? 0),
+                rated_count:    Number(ratedCount?.count    ?? 0),
+                follower_count: Number(followerCount?.count ?? 0),
+                following_count: Number(followingCount?.count ?? 0),
             }
         });
     } catch (err: any) {

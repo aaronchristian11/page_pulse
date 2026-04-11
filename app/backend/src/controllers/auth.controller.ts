@@ -24,9 +24,19 @@ export const register = async (req: Request, res: Response) => {
     try {
         const hashed = await bcrypt.hash(password, 10);
         const [id] = await knex('users').insert({ username, first_name, last_name, email, password: hashed, phone_number });
-        const role = await knex('roles').whereLike('name', '%member%').first();
-        const permission = await knex('permissions').whereLike('name', '%manage shelf%').first();
-        await knex('user_role_permissions').insert({ user_id: id, role_id: role.id, permission_id: permission.id })
+        const rolePermissions = await knex('role_permissions')
+                                    .join('roles', 'role_permissions.role_id', 'roles.id')
+                                    .join('permissions', 'role_permissions.permission_id', 'permissions.id')
+                                    .where('roles.name', 'Member')
+                                    .whereIn('permissions.name', ['Manage shelf', 'Manage groups']);
+        console.log(rolePermissions);
+
+        const inserts = rolePermissions.map(rp => ({
+            user_id: id,
+            role_permission_id: rp.id
+        }));
+
+        await knex('user_role_permissions').insert(inserts);
         const user = await knex('users').where({ id }).first();
         const { password: _, ...safeUser } = user;
         res.status(201).json({ user: safeUser });

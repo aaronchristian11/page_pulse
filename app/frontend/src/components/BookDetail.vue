@@ -21,20 +21,19 @@
 
     const book = computed(() => store.selectedBook)
     const detail = computed(() => store.selectedWorkDetail)
-
-    const onShelf = computed(() => book.value ? store.isOnShelf(book.value.id) : false)
+    const onShelf = computed(() => book.value ? store.isOnShelf(book.value.normalizedKey) : false)
 
     const currentStatus = computed(() => {
         if (!book.value) return null
-        const shelvedBook = store.shelf?.find(b => b.id === book.value!.id)
+        const shelvedBook = store.shelf?.find(b => b.normalizedKey === book.value.normalizedKey)
         return shelvedBook?.reading_status ?? null
     })
 
     const statusOptions = [
-        { value: 'reading',   label: 'Reading',   icon: 'pi pi-book',         color: '2563EB' },
-        { value: 'upcoming',  label: 'Upcoming',  icon: 'pi pi-clock',        color: '7C3AED' },
-        { value: 'completed', label: 'Completed', icon: 'pi pi-check-circle', color: '16A34A' },
-        { value: 'dropped',   label: 'Dropped',   icon: 'pi pi-times-circle', color: 'DC2626' },
+        { value: 'reading', label: 'Reading', icon: 'pi pi-book', color: '0EA5E9' },
+        { value: 'upcoming', label: 'Upcoming', icon: 'pi pi-clock', color: 'F59E0B' },
+        { value: 'completed', label: 'Completed', icon: 'pi pi-check-circle', color: '10B981' },
+        { value: 'dropped', label: 'Dropped', icon: 'pi pi-times-circle', color: 'EF4444' }
     ]
 
     async function handleStatus(status: string) {
@@ -84,6 +83,28 @@
                 <p v-if="book.author" class="text-primary font-medium">{{ book.author }}</p>
             </div>
 
+            <!-- Reading Status (only shown when book is on shelf) -->
+            <div v-if="onShelf">
+                <Divider/>
+                <h3 class="font-semibold text-color mb-3">Reading Status</h3>
+                <div class="status-grid">
+                    <button v-for="opt in statusOptions"
+                            :key="opt.value"
+                            class="status-btn"
+                            :class="{ 'status-btn--active': currentStatus === opt.value }"
+                            :style="`--status-color: #${opt.color}`"
+                            @click="handleStatus(opt.value)">
+                        <i :class="opt.icon" class="text-sm"/>
+                        <span>{{ opt.label }}</span>
+                    </button>
+                </div>
+                <p v-if="currentStatus" class="text-xs text-surface-400 mt-2 text-center">
+                    Click again to clear status
+                </p>
+            </div>
+
+            <Divider/>
+
             <!-- Meta row -->
             <div class="flex justify-center gap-6 text-sm text-surface-400">
                 <span v-if="book.first_publish_year">
@@ -113,12 +134,11 @@
             <div v-if="detail?.subjects?.length">
                 <h3 class="font-semibold text-color mb-2">Genres / Subjects</h3>
                 <div class="flex flex-wrap gap-2">
-                    <Tag
-                        v-for="s in detail.subjects"
-                        :key="s"
-                        :value="s"
-                        severity="secondary"
-                        class="text-xs"
+                    <Tag v-for="s in detail.subjects"
+                         :key="s"
+                         :value="s"
+                         severity="secondary"
+                         class="text-xs"
                     />
                 </div>
             </div>
@@ -130,11 +150,11 @@
 
             <!-- Actions -->
             <div class="flex flex-col gap-3">
-                <Button :icon="store.isOnShelf(book.id) ? 'pi pi-check' : 'pi pi-plus'"
-                        :label="store.isOnShelf(book.id) ? 'On My Shelf' : 'Add to Shelf'"
-                        :severity="store.isOnShelf(book.id) ? 'secondary' : 'primary'"
+                <Button :icon="store.isOnShelf(book.normalizedKey) ? 'pi pi-check' : 'pi pi-plus'"
+                        :label="store.isOnShelf(book.normalizedKey) ? 'On My Shelf' : 'Add to Shelf'"
+                        :severity="store.isOnShelf(book.normalizedKey) ? 'secondary' : 'primary'"
                         class="w-full"
-                        @click="store.isOnShelf(book.id) ? store.removeFromShelf(book.id) : store.addToShelf(book)" />
+                        @click="store.isOnShelf(book.normalizedKey) ? store.removeFromShelf(book.id) : store.addToShelf(book)" />
                 <div class="flex gap-2">
                     <RecommendButton :bookKey="book.id" :bookTitle="book.title" class="flex-1" />
                     <a :href="`https://openlibrary.org/works/${book.id}`" target="_blank" rel="noopener" class="flex-1">
@@ -143,30 +163,8 @@
                 </div>
             </div>
 
-            <!-- Reading Status (only shown when book is on shelf) -->
-            <div v-if="onShelf">
-                <Divider/>
-                <h3 class="font-semibold text-color mb-3">Reading Status</h3>
-                <div class="status-grid">
-                    <button v-for="opt in statusOptions"
-                            :key="opt.value"
-                            class="status-btn"
-                            :class="{ 'status-btn--active': currentStatus === opt.value }"
-                            :style="currentStatus === opt.value ? `--status-color: #${opt.color}` : ''"
-                            @click="handleStatus(opt.value)">
-                        <i :class="opt.icon" class="text-sm"/>
-                        <span>{{ opt.label }}</span>
-                    </button>
-                </div>
-                <p v-if="currentStatus" class="text-xs text-surface-400 mt-2 text-center">
-                    Click again to clear status
-                </p>
-            </div>
-
-            <Divider/>
-
             <!-- Reviews -->
-            <div>
+            <div v-if="onShelf">
                 <h3 class="font-semibold text-color mb-3">Reviews</h3>
                 <ReviewPanel :bookKey="book.normalizedKey" />
             </div>
@@ -188,9 +186,9 @@
     gap: 0.4rem;
     padding: 0.55rem 0.75rem;
     border-radius: 0.5rem;
-    border: 1px solid var(--p-surface-300, #cbd5e1);
-    background: var(--p-surface-0, #ffffff);
-    color: var(--p-surface-600, #475569);
+    border: 1px solid var(--vt-c-divider-light-1);
+    background: var(--color-background);
+    color: var(--color-text);
     font-size: 0.82rem;
     font-weight: 500;
     cursor: pointer;
@@ -198,30 +196,41 @@
 }
 
 .status-btn:hover {
-    border-color: var(--p-primary-400, #818cf8);
-    color: var(--p-primary-500, #6366f1);
-    background: var(--p-primary-50, #eef2ff);
+    background: color-mix(in srgb, var(--status-color) 12%, transparent);
+    border-color: var(--status-color);
+    color: var(--status-color);
 }
 
 .status-btn--active {
-    background: color-mix(in srgb, var(--status-color, #6366f1) 12%, transparent);
-    border-color: var(--status-color, #6366f1);
-    color: var(--status-color, #6366f1);
+    background: var(--status-color);
+    border-color: var(--status-color);
+    color: #ffffff;
     font-weight: 600;
 }
 
-/* Dark mode */
-:root[class*="dark"] .status-btn,
-.dark .status-btn {
-    background: var(--p-surface-800, #1e293b);
-    border-color: var(--p-surface-600, #475569);
-    color: var(--p-surface-300, #cbd5e1);
+.status-btn--active:hover {
+    background: var(--status-color);
+    border-color: var(--status-color);
+    color: #ffffff;
 }
 
-:root[class*="dark"] .status-btn--active,
-.dark .status-btn--active {
-    background: color-mix(in srgb, var(--status-color, #6366f1) 20%, transparent);
-    border-color: var(--status-color, #6366f1);
-    color: var(--status-color, #6366f1);
+@media (prefers-color-scheme: dark) {
+    .status-btn {
+        background: var(--color-background-soft);
+        border-color: var(--vt-c-divider-dark-1);
+        color: var(--color-text);
+    }
+
+    .status-btn--active {
+        background: color-mix(in srgb, var(--status-color) 20%, transparent);
+        border-color: var(--status-color);
+        color: var(--status-color);
+    }
+
+    .status-btn--active:hover {
+        background: color-mix(in srgb, var(--status-color) 30%, transparent);
+        border-color: var(--status-color);
+        color: var(--status-color);
+    }
 }
 </style>

@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
-import type {User} from "../types/express.d.ts";
+import type { User } from "../types/express.d.ts";
 import knex from "../db/database";
-import {bookCache} from "../cache/book.cache";
-import {openLibraryApi} from "../api/open_library.api";
+import { bookCache } from "../cache/book.cache";
+import { openLibraryApi } from "../api/open_library.api";
 
 export const followUser = async (req: Request, res: Response) => {
     const me = req.user as User;
@@ -16,10 +16,23 @@ export const followUser = async (req: Request, res: Response) => {
         const target = await knex('users').where({ id: userId }).whereNull('deleted_at').first();
         if (!target) return res.status(404).json({ error: 'User not found.' });
 
-        await knex('follows')
+        const inserted = await knex('follows')
             .insert({ follower_id: me.id, following_id: userId })
             .onConflict(['follower_id', 'following_id'])
             .ignore();
+
+        // Only notify if a new follow row was actually created (not a duplicate)
+        if (inserted) {
+            await knex('notifications')
+                .insert({
+                    recipient_id: userId,
+                    actor_id: me.id,
+                    type: 'follow',
+                    is_read: false,
+                })
+                .onConflict(['recipient_id', 'actor_id', 'type'])
+                .ignore();
+        }
 
         res.json({ message: `Now following ${target.username}.` });
     } catch (err: any) {
@@ -34,6 +47,11 @@ export const unfollowUser = async (req: Request, res: Response) => {
     try {
         await knex('follows')
             .where({ follower_id: me.id, following_id: userId })
+            .delete();
+
+        // Remove the follow notification so it doesn't linger in the inbox
+        await knex('notifications')
+            .where({ recipient_id: userId, actor_id: me.id, type: 'follow' })
             .delete();
 
         res.json({ message: 'Unfollowed.' });
@@ -102,7 +120,6 @@ export const getFriendRecommendations = async (req: Request, res: Response) => {
     const me = req.user as User;
 
     try {
-        // Get IDs of users I follow
         const followingRows = await knex('follows')
             .where({ follower_id: me.id })
             .select('following_id');
@@ -113,13 +130,11 @@ export const getFriendRecommendations = async (req: Request, res: Response) => {
             return res.json({ recommendations: [] });
         }
 
-        // Get books on my shelf
         const myBooks = await knex('user_books')
             .where({ user_id: me.id })
             .select('book_id');
         const myBookIds = myBooks.map((b: any) => b.book_id);
 
-        // Highly-rated (>= 4) books from people I follow that aren't on my shelf
         const query = knex('user_books')
             .join('books', 'user_books.book_id', 'books.id')
             .join('users', 'user_books.user_id', 'users.id')
