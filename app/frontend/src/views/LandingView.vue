@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import Button from 'primevue/button'
 
 const router = useRouter()
 </script>
@@ -8,26 +7,33 @@ const router = useRouter()
 <template>
     <main class="landing">
 
-        <!-- Hero Section -->
+        <!-- Hero -->
         <section class="hero">
             <div class="hero__inner">
 
                 <!-- Logo -->
                 <div class="hero__logo">
-                    <i class="pi pi-heart-fill hero__logo-icon"/>
+                    <svg width="44" height="44" viewBox="0 0 112 104" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M56,4 Q28,0 4,4 L4,100 Q28,96 56,100 Z" fill="#35495e"/>
+                        <path d="M56,4 Q84,0 108,4 L108,100 Q84,96 56,100 Z" fill="#2d3f51"/>
+                        <line x1="56" y1="4" x2="56" y2="100" stroke="rgba(0,0,0,0.3)" stroke-width="2.5"/>
+                        <line x1="12" y1="36" x2="50" y2="36" stroke="white" stroke-width="1.5" opacity="0.3"/>
+                        <line x1="12" y1="52" x2="50" y2="52" stroke="white" stroke-width="1.5" opacity="0.3"/>
+                        <line x1="12" y1="68" x2="50" y2="68" stroke="white" stroke-width="1.5" opacity="0.3"/>
+                        <polyline points="62,58 74,58 82,28 92,84 100,58 110,58" fill="none" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="110" cy="58" r="6" fill="white"/>
+                    </svg>
                     <span class="hero__logo-text">PagePulse</span>
                 </div>
 
-                <!-- Slogan -->
                 <h1 class="hero__slogan">Reading Made Easy</h1>
                 <p class="hero__sub">Discover, organise, and share your favourite books — all in one place.</p>
-
             </div>
 
-            <!-- Decorative wave -->
+            <!-- Wave transitioning to dark bg -->
             <div class="hero__wave">
                 <svg viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="currentColor"/>
+                    <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="#1a1a1d"/>
                 </svg>
             </div>
         </section>
@@ -37,7 +43,7 @@ const router = useRouter()
             <div class="features__grid">
 
                 <div class="feature-card" @click="router.push('/catalogue')">
-                    <div class="feature-card__icon-wrap feature-card__icon-wrap--blue">
+                    <div class="feature-card__icon-wrap feature-card__icon-wrap--primary">
                         <i class="pi pi-search feature-card__icon"/>
                     </div>
                     <h2 class="feature-card__title">Browse Catalogue</h2>
@@ -46,7 +52,7 @@ const router = useRouter()
                 </div>
 
                 <div class="feature-card" @click="router.push('/login')">
-                    <div class="feature-card__icon-wrap feature-card__icon-wrap--green">
+                    <div class="feature-card__icon-wrap feature-card__icon-wrap--primary">
                         <i class="pi pi-user-plus feature-card__icon"/>
                     </div>
                     <h2 class="feature-card__title">Register an Account</h2>
@@ -55,17 +61,19 @@ const router = useRouter()
                 </div>
 
                 <div class="feature-card feature-card--no-hover">
-                    <div class="feature-card__icon-wrap feature-card__icon-wrap--purple">
+                    <div class="feature-card__icon-wrap feature-card__icon-wrap--muted">
                         <i class="pi pi-info-circle feature-card__icon"/>
                     </div>
                     <h2 class="feature-card__title">About Us</h2>
                     <p class="feature-card__desc">
-                        PagePulse is built by <strong>Poseidon Development Studios</strong> — a team of five students at Ontario Tech University. Our mission is to make book discovery simple, social, and enjoyable for every kind of reader.
+                        PagePulse is built by <strong class="feature-card__strong">Poseidon Development Studios</strong>
+                        — a team of five students at Ontario Tech University. Our mission is to make book discovery
+                        simple, social, and enjoyable for every kind of reader.
                     </p>
                 </div>
 
                 <div class="feature-card feature-card--no-hover">
-                    <div class="feature-card__icon-wrap feature-card__icon-wrap--amber">
+                    <div class="feature-card__icon-wrap feature-card__icon-wrap--muted">
                         <i class="pi pi-envelope feature-card__icon"/>
                     </div>
                     <h2 class="feature-card__title">Contact Support</h2>
@@ -80,7 +88,12 @@ const router = useRouter()
 
         <!-- Footer -->
         <footer class="landing-footer">
-            <span><i class="pi pi-heart-fill" style="color: var(--p-primary-500)"/> PagePulse &copy; 2026 Poseidon Development Studios</span>
+            <svg width="14" height="14" viewBox="0 0 112 104" fill="none" style="display:inline;vertical-align:middle;margin-right:4px">
+                <path d="M56,4 Q28,0 4,4 L4,100 Q28,96 56,100 Z" fill="#35495e"/>
+                <path d="M56,4 Q84,0 108,4 L108,100 Q84,96 56,100 Z" fill="#42b883"/>
+                <polyline points="62,58 74,58 82,28 92,84 100,58 110,58" fill="none" stroke="white" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            PagePulse &copy; 2026 Poseidon Development Studios
         </footer>
 
     </main>
@@ -93,12 +106,13 @@ const router = useRouter()
     display: flex;
     flex-direction: column;
     background: #1a1a1d;
+    color: #e2e8f0;
 }
 
 /* ── Hero ───────────────────────────────────────────────── */
 .hero {
     position: relative;
-    background: linear-gradient(135deg, var(--p-primary-700, #4338ca) 0%, var(--p-primary-500, #6366f1) 60%, var(--p-primary-400, #818cf8) 100%);
+    background: linear-gradient(135deg, #35495e 0%, #3d6b58 50%, #42b883 100%);
     padding: 5rem 1.5rem 6rem;
     text-align: center;
     overflow: hidden;
@@ -118,17 +132,11 @@ const router = useRouter()
 .hero__logo {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-}
-
-.hero__logo-icon {
-    font-size: 2.5rem;
-    color: #fca5a5;
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.25));
+    gap: 0.7rem;
 }
 
 .hero__logo-text {
-    font-size: 2.5rem;
+    font-size: 2.4rem;
     font-weight: 800;
     color: #ffffff;
     letter-spacing: -0.5px;
@@ -145,56 +153,9 @@ const router = useRouter()
 
 .hero__sub {
     font-size: 1.1rem;
-    color: rgba(255,255,255,0.8);
+    color: rgba(255, 255, 255, 0.82);
     margin: 0;
     max-width: 480px;
-}
-
-.hero__actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 0.5rem;
-}
-
-/* ── CTA Buttons ────────────────────────────────────────── */
-.cta-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.75rem;
-    border-radius: 9999px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.18s ease;
-    border: 2px solid transparent;
-}
-
-.cta-btn--primary {
-    background: #ffffff;
-    color: var(--p-primary-600, #4f46e5);
-    border-color: #ffffff;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-}
-
-.cta-btn--primary:hover {
-    background: var(--p-primary-50, #eef2ff);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-}
-
-.cta-btn--outline {
-    background: transparent;
-    color: #ffffff;
-    border-color: rgba(255,255,255,0.7);
-}
-
-.cta-btn--outline:hover {
-    background: rgba(255,255,255,0.15);
-    border-color: #ffffff;
-    transform: translateY(-2px);
 }
 
 /* ── Wave ───────────────────────────────────────────────── */
@@ -204,7 +165,6 @@ const router = useRouter()
     left: 0;
     width: 100%;
     height: 60px;
-    color: #1a1a1d;
 }
 
 .hero__wave svg {
@@ -212,7 +172,7 @@ const router = useRouter()
     height: 100%;
 }
 
-/* ── Features Grid ──────────────────────────────────────── */
+/* ── Features ───────────────────────────────────────────── */
 .features {
     flex: 1;
     padding: 3rem 1.5rem 2rem;
@@ -229,8 +189,8 @@ const router = useRouter()
 
 /* ── Feature Card ───────────────────────────────────────── */
 .feature-card {
-    background: var(--p-surface-0, #ffffff);
-    border: 1px solid var(--p-surface-200, #e2e8f0);
+    background: #22272e;
+    border: 1px solid #2d3748;
     border-radius: 1rem;
     padding: 1.75rem;
     display: flex;
@@ -238,13 +198,12 @@ const router = useRouter()
     gap: 0.75rem;
     cursor: pointer;
     transition: all 0.18s ease;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
 .feature-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-    border-color: var(--p-primary-300, #a5b4fc);
+    border-color: #42b883;
+    box-shadow: 0 8px 24px rgba(66, 184, 131, 0.12);
 }
 
 .feature-card--no-hover {
@@ -253,10 +212,11 @@ const router = useRouter()
 
 .feature-card--no-hover:hover {
     transform: none;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    border-color: var(--p-surface-200, #e2e8f0);
+    border-color: #2d3748;
+    box-shadow: none;
 }
 
+/* ── Icon wrap ──────────────────────────────────────────── */
 .feature-card__icon-wrap {
     width: 3rem;
     height: 3rem;
@@ -266,37 +226,42 @@ const router = useRouter()
     justify-content: center;
 }
 
-.feature-card__icon-wrap--blue   { background: #dbeafe; }
-.feature-card__icon-wrap--green  { background: #dcfce7; }
-.feature-card__icon-wrap--purple { background: #ede9fe; }
-.feature-card__icon-wrap--amber  { background: #fef3c7; }
+.feature-card__icon-wrap--primary {
+    background: rgba(66, 184, 131, 0.15);
+}
 
-.feature-card__icon {
+.feature-card__icon-wrap--muted {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.feature-card__icon-wrap--primary .feature-card__icon {
+    color: #42b883;
     font-size: 1.35rem;
 }
 
-.feature-card__icon-wrap--blue   .feature-card__icon { color: #2563eb; }
-.feature-card__icon-wrap--green  .feature-card__icon { color: #16a34a; }
-.feature-card__icon-wrap--purple .feature-card__icon { color: #7c3aed; }
-.feature-card__icon-wrap--amber  .feature-card__icon { color: #d97706; }
+.feature-card__icon-wrap--muted .feature-card__icon {
+    color: #94a3b8;
+    font-size: 1.35rem;
+}
 
+/* ── Card text ──────────────────────────────────────────── */
 .feature-card__title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--p-surface-900, #0f172a);
+    color: #e2e8f0;
     margin: 0;
 }
 
 .feature-card__desc {
     font-size: 0.9rem;
-    color: var(--p-surface-500, #64748b);
-    line-height: 1.55;
+    color: #94a3b8;
+    line-height: 1.6;
     margin: 0;
 }
 
-.feature-card__desc--muted {
-    color: var(--p-surface-400, #94a3b8);
-    font-size: 0.82rem;
+.feature-card__strong {
+    color: #42b883;
+    font-weight: 600;
 }
 
 .feature-card__link {
@@ -305,7 +270,7 @@ const router = useRouter()
     gap: 0.3rem;
     font-size: 0.88rem;
     font-weight: 600;
-    color: var(--p-primary-500, #6366f1);
+    color: #42b883;
     text-decoration: none;
     margin-top: auto;
 }
@@ -319,40 +284,7 @@ const router = useRouter()
     text-align: center;
     padding: 1.5rem;
     font-size: 0.82rem;
-    color: var(--p-surface-400, #94a3b8);
-    border-top: 1px solid var(--p-surface-200, #e2e8f0);
-}
-
-/* ── Dark mode ──────────────────────────────────────────── */
-.dark .hero,
-:root[class*="dark"] .hero {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #3730a3 100%);
-}
-
-.dark .hero__wave,
-:root[class*="dark"] .hero__wave {
-    color: var(--p-surface-900, #0f172a);
-}
-
-.dark .landing,
-:root[class*="dark"] .landing {
-    background: var(--p-surface-900, #0f172a);
-}
-
-.dark .feature-card,
-:root[class*="dark"] .feature-card {
-    background: var(--p-surface-800, #1e293b);
-    border-color: var(--p-surface-700, #334155);
-}
-
-.dark .feature-card__title,
-:root[class*="dark"] .feature-card__title {
-    color: var(--p-surface-50, #f8fafc);
-}
-
-.dark .landing-footer,
-:root[class*="dark"] .landing-footer {
-    border-color: var(--p-surface-700, #334155);
-    background: var(--p-surface-900, #0f172a);
+    color: #64748b;
+    border-top: 1px solid #2d3748;
 }
 </style>

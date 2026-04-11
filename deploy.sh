@@ -6,7 +6,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Colour
+NC='\033[0m'
 
 log()  { echo -e "${CYAN}[deploy]${NC} $*"; }
 ok()   { echo -e "${GREEN}[ok]${NC}    $*"; }
@@ -90,12 +90,22 @@ fi
 
 log "Using compose file: $COMPOSE_FILE"
 
-# ─── Ensure data directory exists (volume mount) ──────────────────────────────
+# ─── Ensure data directory exists with correct ownership ──────────────────────
+# node:24-alpine runs as uid 1000 (node user) at runtime.
+# The data dir must be owned by uid 1000 so SQLite and the book cache can write.
 DATA_DIR="${SCRIPT_DIR}/data"
-if [[ ! -d "$DATA_DIR" ]]; then
-    log "Creating data directory at $DATA_DIR"
-    mkdir -p "$DATA_DIR"
-fi
+
+log "Preparing data directory..."
+mkdir -p "$DATA_DIR"
+
+# Set ownership to uid/gid 1000 (the node user inside the container)
+chown -R 1000:1000 "$DATA_DIR"
+chmod 775 "$DATA_DIR"
+
+# Fix any existing .db or .json files in the directory
+find "$DATA_DIR" -type f \( -name "*.db" -o -name "*.json" \) -exec chmod 664 {} \;
+
+ok "Data directory ready: $DATA_DIR (owner: 1000:1000)"
 
 # ─── Build & bring up containers ──────────────────────────────────────────────
 log "Building images..."

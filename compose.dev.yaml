@@ -10,6 +10,7 @@ services:
       - ./data:/app/data
       - ./app/backend:/app
       - /app/node_modules
+    user: "node"
     environment:
       - DB_PATH=/app/data/pagepulse.db
       - PORT=3000

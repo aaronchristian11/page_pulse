@@ -16,6 +16,7 @@ export const useGroupShelvesStore = defineStore('groupShelves', () => {
     const groups = ref<GroupSummary[]>([])
     const activeGroupId = ref<string | null>(null)
     const error = ref<string | null>(null)
+    const isLoading = ref(false)
 
     const currentUserId = computed(() => auth.user?.id ?? null)
     const currentUsername = computed(() => auth.user?.username ?? null)
@@ -32,6 +33,7 @@ export const useGroupShelvesStore = defineStore('groupShelves', () => {
     }
 
     async function loadGroups() {
+        isLoading.value = true;
         try {
             groups.value = await groupShelvesApi.listGroups(currentUserId.value)
 
@@ -46,6 +48,8 @@ export const useGroupShelvesStore = defineStore('groupShelves', () => {
             }
         } catch (err) {
             setError(err)
+        } finally {
+            isLoading.value = false;
         }
     }
 
@@ -158,7 +162,11 @@ export const useGroupShelvesStore = defineStore('groupShelves', () => {
         }
     }
 
-    watch(currentUserId, () => { loadGroups() }, { immediate: true })
+    watch(() => currentUserId.value, (id) => {
+        if (id) {
+            loadGroups()
+        }
+    }, { immediate: true })
 
     return {
         groups, activeGroupId, activeGroup, activeGroupBooks, activeGroupMembers,

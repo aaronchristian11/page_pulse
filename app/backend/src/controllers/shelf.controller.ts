@@ -18,7 +18,7 @@ export const getShelfBooks = async (req: Request, res: Response) => {
                 const work = await bookCache.getOrFetch(user_book.key, () =>
                     openLibraryApi.getWork(user_book.key)
                 );
-                return { ...work, rating: user_book.rating ?? null, reading_status: user_book.reading_status ?? null };
+                return { ...work, ...user_book };
             })
         );
 

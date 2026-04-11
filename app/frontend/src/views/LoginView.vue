@@ -55,7 +55,7 @@ async function doLogin() {
         })
         auth.setUser(res.data.user)
         toast.add({ severity: 'success', summary: 'Successfully Logged In!', life: 3000 })
-        router.push('/')
+        router.push('/catalogue')
     } catch (e: any) {
         error.value = e.response?.data?.error || 'Login failed'
     } finally {
@@ -86,7 +86,7 @@ async function doRegister() {
         })
         auth.setUser(res.data.user)
         toast.add({ severity: 'success', summary: 'Successfully Registered!', life: 3000 })
-        router.push('/')
+        router.push('/catalogue')
     } catch (e: any) {
         error.value = e.response?.data?.error || 'Registration failed'
     } finally {

@@ -42,12 +42,12 @@
 
         <template #footer>
             <div class="px-1 pb-1">
-                <Button :icon="store.isOnShelf(book.id) ? 'pi pi-check' : 'pi pi-plus'"
-                        :label="store.isOnShelf(book.id) ? 'On Shelf' : 'Add'"
-                        :severity="store.isOnShelf(book.id) ? 'secondary' : 'primary'"
+                <Button :icon="store.isOnShelf(book.normalizedKey) ? 'pi pi-check' : 'pi pi-plus'"
+                        :label="store.isOnShelf(book.normalizedKey) ? 'On Shelf' : 'Add'"
+                        :severity="store.isOnShelf(book.normalizedKey) ? 'secondary' : 'primary'"
                         size="small"
                         class="w-full"
-                        @click.stop="store.isOnShelf(book.id) ? store.removeFromShelf(book.id) : store.addToShelf(book)" />
+                        @click.stop="store.isOnShelf(book.normalizedKey) ? store.removeFromShelf(book.id) : store.addToShelf(book)" />
             </div>
         </template>
     </Card>
