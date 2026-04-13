@@ -1,27 +1,13 @@
-FROM node:24-alpine AS builder
-
-# install sqlite3 package
-RUN apk add sqlite
-
-# make the 'app' folder the current working directory
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci
-
-COPY . .
-RUN npx tsc
-
-# --- Production image ---
 FROM node:24-alpine
 
-# make the 'app' folder the current working directory
+RUN apk add sqlite
+
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci --workspaces=false
 
-COPY --from=builder /app/dist ./dist
+COPY . .
 
 RUN mkdir -p /app/data && chown -R node:node /app/data
 
@@ -29,4 +15,4 @@ USER node
 
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+CMD sh -c "npx tsx ./node_modules/.bin/knex --knexfile src/db/knexfile.ts migrate:latest && npx tsx src/index.ts"
