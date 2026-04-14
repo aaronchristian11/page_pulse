@@ -36,6 +36,8 @@ export function toBook(b: BookSearchResult): Book {
     }
 }
 
+const BASE = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api';
+
 export const useBooksStore = defineStore('books', () => {
     const authStore = useAuthStore();
     const user = computed(() => authStore.user);
@@ -106,7 +108,7 @@ export const useBooksStore = defineStore('books', () => {
             router.push('login');
         } else {
             if (shelf.value && !shelf.value.find(b => b.id === book.id)) {
-                await axios.post(`/api/shelves/${user.value.id}/book`, {
+                await axios.post(`${BASE}/shelves/${user.value.id}/book`, {
                     book_key: book.normalizedKey
                 }).then(() => {
                     shelf.value.push(book);
@@ -121,7 +123,7 @@ export const useBooksStore = defineStore('books', () => {
         if (!user.value) {
             router.push('login');
         } else {
-            await axios.delete(`/api/shelves/${user.value.id}/book`, {
+            await axios.delete(`${BASE}/shelves/${user.value.id}/book`, {
                 data: {
                     book_key: shelf.value.find(b => b.id === bookId)?.normalizedKey
                 }
@@ -138,7 +140,7 @@ export const useBooksStore = defineStore('books', () => {
             router.push('login');
         } else {
             isLoading.value = true;
-            await axios.get(`/api/shelves/${user.value.id}/books`)
+            await axios.get(`${BASE}/shelves/${user.value.id}/books`)
                 .then(res => shelf.value = res.data.books.map(toBook))
                 .catch(err => {
                     error.value = err.response?.data?.error || 'Failed to fetch shelf.';
@@ -157,7 +159,7 @@ export const useBooksStore = defineStore('books', () => {
 
     async function setReadingStatus(bookKey: string, status: string) {
         if (!user.value) return;
-        await axios.patch(`/api/shelves/${user.value.id}/book/status`, {
+        await axios.patch(`${BASE}/shelves/${user.value.id}/book/status`, {
             book_key: bookKey,
             status,
         }).then(() => {
@@ -173,7 +175,7 @@ export const useBooksStore = defineStore('books', () => {
     async function rateBook(bookKey: string, rating: number) {
         if (!user.value) return;
 
-        await axios.patch(`/api/shelves/${user.value.id}/book/rating`, {
+        await axios.patch(`${BASE}/shelves/${user.value.id}/book/rating`, {
             book_key: bookKey,
             rating,
         }).then(() => {

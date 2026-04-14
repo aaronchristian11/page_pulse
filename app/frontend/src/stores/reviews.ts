@@ -14,6 +14,8 @@ export interface Review {
     last_name: string
 }
 
+const BASE = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api';
+
 export const useReviewsStore = defineStore('reviews', () => {
     const authStore = useAuthStore()
 
@@ -32,7 +34,7 @@ export const useReviewsStore = defineStore('reviews', () => {
             isLoading.value = true
             const params: Record<string, any> = {}
             if (groupId) params.group_id = groupId
-            const res = await axios.get(`/api/reviews/book/${bookKey}`, {
+            const res = await axios.get(`${BASE}/reviews/book/${bookKey}`, {
                 params
             })
             reviewsByBook.value[key] = res.data.reviews
@@ -51,7 +53,7 @@ export const useReviewsStore = defineStore('reviews', () => {
     ) {
         try {
             await axios.post(
-                '/api/reviews',
+                `${BASE}/reviews`,
                 {
                     book_key: bookKey,
                     rating,
@@ -68,7 +70,7 @@ export const useReviewsStore = defineStore('reviews', () => {
 
     async function deleteReview(reviewId: number, bookKey: string, groupId?: string | null) {
         try {
-            await axios.delete(`/api/reviews/${reviewId}`)
+            await axios.delete(`${BASE}/reviews/${reviewId}`)
             const key = cacheKey(bookKey, groupId)
             if (reviewsByBook.value[key]) {
                 reviewsByBook.value[key] = reviewsByBook.value[key].filter(

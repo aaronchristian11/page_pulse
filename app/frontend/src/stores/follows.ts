@@ -18,6 +18,8 @@ export interface FriendRecommendation {
     recommended_by: string
 }
 
+const BASE = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api';
+
 export const useFollowsStore = defineStore('follows', () => {
     const authStore = useAuthStore()
 
@@ -35,7 +37,7 @@ export const useFollowsStore = defineStore('follows', () => {
         if (!authStore.user) return
         try {
             isLoading.value = true
-            const res = await axios.get('/api/follows/following')
+            const res = await axios.get(`${BASE}/follows/following`)
             following.value = res.data.following
         } catch (err: any) {
             error.value = err.response?.data?.error ?? 'Failed to load following.'
@@ -48,7 +50,7 @@ export const useFollowsStore = defineStore('follows', () => {
         if (!authStore.user) return
         try {
             isLoading.value = true
-            const res = await axios.get('/api/follows/followers')
+            const res = await axios.get(`${BASE}/follows/followers`)
             followers.value = res.data.followers
         } catch (err: any) {
             error.value = err.response?.data?.error ?? 'Failed to load followers.'
@@ -59,7 +61,7 @@ export const useFollowsStore = defineStore('follows', () => {
 
     async function followUser(userId: number) {
         try {
-            await axios.post(`/api/follows/follow/${userId}`)
+            await axios.post(`${BASE}/follows/follow/${userId}`)
             await loadFollowing()
         } catch (err: any) {
             error.value = err.response?.data?.error ?? 'Failed to follow user.'
@@ -68,7 +70,7 @@ export const useFollowsStore = defineStore('follows', () => {
 
     async function unfollowUser(userId: number) {
         try {
-            await axios.delete(`/api/follows/unfollow/${userId}`)
+            await axios.delete(`${BASE}/follows/unfollow/${userId}`)
             following.value = following.value.filter((u) => u.id !== userId)
         } catch (err: any) {
             error.value = err.response?.data?.error ?? 'Failed to unfollow user.'
@@ -79,7 +81,7 @@ export const useFollowsStore = defineStore('follows', () => {
         if (!authStore.user) return
         try {
             isLoading.value = true
-            const res = await axios.get('/api/follows/friend-recommendations')
+            const res = await axios.get(`${BASE}/follows/friend-recommendations`)
             friendRecommendations.value = res.data.recommendations.map(toBook)
         } catch (err: any) {
             error.value = err.response?.data?.error ?? 'Failed to load recommendations.'
@@ -90,7 +92,7 @@ export const useFollowsStore = defineStore('follows', () => {
 
     async function getFollowedUserShelf(userId: number) {
         try {
-            const res = await axios.get(`/api/follows/${userId}/shelf`)
+            const res = await axios.get(`${BASE}/follows/${userId}/shelf`)
             return res.data.books
         } catch (err: any) {
             error.value = err.response?.data?.error ?? 'Failed to load shelf.'

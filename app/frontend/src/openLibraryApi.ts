@@ -1,7 +1,7 @@
 //Keeping this file for API reference
 
-const BASE_URL = '/api/books'
-const COVERS_URL = '/api/books/covers'
+const BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/books` : '/api/books'
+const COVERS_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/books/covers` : '/api/books/covers'
 
 export interface BookSearchResult {
     key: string
