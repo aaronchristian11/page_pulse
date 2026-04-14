@@ -15,4 +15,4 @@ USER node
 
 EXPOSE 3000
 
-CMD sh -c "npx tsx ./node_modules/.bin/knex --knexfile src/db/knexfile.ts migrate:latest && npx tsx src/index.ts"
+CMD sh -c "npx tsx ./node_modules/.bin/knex --knexfile src/db/knexfile.ts migrate:latest && npx tsx ./node_modules/.bin/knex --knexfile src/db/knexfile.ts seed:run && npx tsx src/index.ts"
