@@ -7,7 +7,7 @@ COPY package*.json ./
 RUN npm ci --workspaces=false
 
 COPY . .
-ARG VITE_API_URL
+ARG VITE_API_URL=https://page-pulse-backend.onrender.com
 ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
