@@ -95,7 +95,7 @@
                         class="w-full"
                         @click="store.isOnShelf(book.id) ? store.removeFromShelf(book.id) : store.addToShelf(book)" />
                 <div class="flex gap-2">
-                    <RecommendButton :bookKey="book.id" :bookTitle="book.title" class="flex-1" />
+                    <RecommendButton :bookKey="book.normalizedKey" :bookTitle="book.title" class="flex-1" />
                     <a :href="`https://openlibrary.org/works/${book.id}`" target="_blank" rel="noopener" class="flex-1">
                         <Button label="Open Library" icon="pi pi-external-link" severity="secondary" outlined class="w-full"/>
                     </a>
@@ -107,7 +107,7 @@
             <!-- Reviews -->
             <div>
                 <h3 class="font-semibold text-color mb-3">Reviews</h3>
-                <ReviewPanel :bookKey="book.id" />
+                <ReviewPanel :bookKey="book.normalizedKey" />
             </div>
         </div>
     </Drawer>

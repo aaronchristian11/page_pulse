@@ -134,7 +134,7 @@ export const useGroupShelvesStore = defineStore('groupShelves', () => {
         if (!activeGroupId.value) throw new Error('Choose a group first.')
         clearError()
         try {
-            const books = await groupShelvesApi.addGroupBook(activeGroupId.value, book.id)
+            const books = await groupShelvesApi.addGroupBook(activeGroupId.value, book.normalizedKey)
             const group = groups.value.find(g => g.id === activeGroupId.value)
             if (group) {
                 group.books = books

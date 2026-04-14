@@ -10,8 +10,9 @@ export const getShelfBooks = async (req: Request, res: Response) => {
     try {
         const user_books = await knex('user_books')
             .join('books', 'user_books.book_id', 'books.id')
+            .leftJoin('reviews', 'reviews.book_id', 'user_books.book_id')
             .where('user_books.user_id', userId)
-            .select('books.id', 'books.key', 'user_books.rating', 'user_books.reading_status');
+            .select('books.id', 'books.key', 'reviews.rating', 'user_books.reading_status');
 
         const books = await Promise.all(
             user_books.map(async (user_book: any) => {

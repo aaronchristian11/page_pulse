@@ -71,7 +71,6 @@ export const getInbox = async (req: Request, res: Response) => {
     const me = req.user as User;
 
     try {
-        // ── Recommendations ───────────────────────────────────────────────────
         const rawRecs = await knex('recommendations')
             .join('users as sender', 'recommendations.sender_id', 'sender.id')
             .join('books', 'recommendations.book_id', 'books.id')
@@ -98,7 +97,6 @@ export const getInbox = async (req: Request, res: Response) => {
             })
         );
 
-        // ── Follow notifications ───────────────────────────────────────────────
         const rawFollows = await knex('notifications')
             .join('users as actor', 'notifications.actor_id', 'actor.id')
             .where('notifications.recipient_id', me.id)
@@ -120,7 +118,6 @@ export const getInbox = async (req: Request, res: Response) => {
             group_id: null,
         }));
 
-        // ── Merge and sort by date descending ─────────────────────────────────
         const inbox = [...recommendations, ...follows].sort(
             (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
