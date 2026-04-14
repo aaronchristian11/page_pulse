@@ -7,6 +7,10 @@ A MyAnimeList-inspired bookshelf management app built with Vue 3 + Express + SQL
 - **Backend**: Express.js, better-sqlite3
 - **Database**: SQLite (persisted via Docker volume)
 
+## Demo
+
+https://github.com/user-attachments/assets/98186f5f-e12c-42f4-8f88-5e17b798f99b
+
 ## Installing Docker on Windows
 
 1. Download **Docker Desktop for Windows** from https://www.docker.com/products/docker-desktop
