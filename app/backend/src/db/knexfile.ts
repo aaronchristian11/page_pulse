@@ -36,18 +36,18 @@ const config: { [key: string]: Knex.Config } = {
   },
 
   production: {
-    client: "postgresql",
+    client: "sqlite3",
     connection: {
-      database: "my_db",
-      user: "username",
-      password: "password"
+      filename: process.env.DB_PATH || '../../data/pagepulse.db'
     },
-    pool: {
-      min: 2,
-      max: 10
-    },
+    useNullAsDefault: true,
     migrations: {
-      tableName: "knex_migrations"
+      directory: './migrations',
+      extension: 'ts'
+    },
+    seeds: {
+      directory: './seeds',
+      extension: 'ts'
     }
   }
 
