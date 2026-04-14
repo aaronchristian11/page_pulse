@@ -16,6 +16,8 @@ export interface InboxItem {
     book_key: string
 }
 
+const BASE = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api';
+
 export const useRecommendationsStore = defineStore('recommendations', () => {
     const authStore = useAuthStore()
 
@@ -30,7 +32,7 @@ export const useRecommendationsStore = defineStore('recommendations', () => {
         if (!authStore.user) return
         try {
             isLoading.value = true
-            const res = await axios.get('/api/recommendations/inbox')
+            const res = await axios.get(`${BASE}/recommendations/inbox`)
             inbox.value = res.data.inbox.map((item: any) =>
                 item.type === 'recommendation' ? { ...item, ...toBook(item) } : item
             )
@@ -44,7 +46,7 @@ export const useRecommendationsStore = defineStore('recommendations', () => {
     async function loadUnreadCount() {
         if (!authStore.user) return
         try {
-            const res = await axios.get('/api/recommendations/inbox/unread-count');
+            const res = await axios.get(`${BASE}/recommendations/inbox/unread-count`);
             unreadCount.value = res.data.unread
         } catch {
             // Silent fail — badge not critical
@@ -53,7 +55,7 @@ export const useRecommendationsStore = defineStore('recommendations', () => {
 
     async function markAsRead(id: number, type: string = 'recommendation') {
         try {
-            await axios.patch(`/api/recommendations/${id}/read?type=${type}`)
+            await axios.patch(`${BASE}/recommendations/${id}/read?type=${type}`)
             const item = inbox.value.find((i) => i.id === id)
             if (item) {
                 item.is_read = true
@@ -66,7 +68,7 @@ export const useRecommendationsStore = defineStore('recommendations', () => {
 
     async function sendRecommendation(bookKey: string, recipientId?: number, groupId?: number, message?: string) {
         try {
-            await axios.post('/api/recommendations', {
+            await axios.post(`${BASE}/recommendations`, {
                     book_key: bookKey,
                     recipient_id: recipientId ?? null,
                     group_id: groupId ?? null,

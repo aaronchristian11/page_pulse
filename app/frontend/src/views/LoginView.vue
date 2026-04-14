@@ -15,6 +15,8 @@ import TabPanel from 'primevue/tabpanel'
 import Divider from 'primevue/divider'
 import logo from '@/assets/logo.svg'
 
+const BASE = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api';
+
 const auth = useAuthStore()
 const router = useRouter()
 const toast = useToast()
@@ -49,7 +51,7 @@ async function doLogin() {
     }
     loading.value = true
     try {
-        const res = await axios.post('/api/auth/login', {
+        const res = await axios.post(`${BASE}/auth/login`, {
             username: loginForm.value.username,
             password: loginForm.value.password,
         })
@@ -75,7 +77,7 @@ async function doRegister() {
     }
     loading.value = true
     try {
-        const res = await axios.post('/api/auth/register', {
+        const res = await axios.post(`${BASE}/auth/register`, {
             username: regForm.value.username,
             first_name: regForm.value.first_name,
             last_name: regForm.value.last_name,
